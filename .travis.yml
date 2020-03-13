@@ -32,6 +32,7 @@ jobs:
   include:
     - stage: "Tests"
       name: "Test travis #1"
+      install: echo "skip"
       script: echo "current branch is ${BRANCH}"
       if: env.BRANCH = hw02_unpack_string
 
