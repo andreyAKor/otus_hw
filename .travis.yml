@@ -33,12 +33,12 @@ jobs:
     - stage: "Tests"
       name: "Test branch #2"
       script: echo "current branch is ${BRANCH}"
-      if: BRANCH == ""
+      if: branch == ""
 
     - stage: "Tests"
       name: "Test branch"
       script: echo "current branch is ${BRANCH}"
-      if: BRANCH == hw02_unpack_string
+      if: branch == hw02_unpack_string
 
     - stage: "Tests"
       name: "go get"
