@@ -37,6 +37,12 @@ jobs:
       if: env.BRANCH = hw02_unpack_string
 
     - stage: "Tests"
+      name: "Test travis #2"
+      install: echo "skip"
+      script: echo "current branch is ${BRANCH}"
+      if: branch = hw02_unpack_string
+
+    - stage: "Tests"
       name: "go get"
       install: echo "skip"
       script: go get "github.com/${TRAVIS_REPO_SLUG}/${BRANCH}"
