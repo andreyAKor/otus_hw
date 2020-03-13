@@ -67,6 +67,12 @@ jobs:
       if: ${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH} = hw02_unpack_string
 
     - stage: "Tests"
+      name: "Test travis #7"
+      install: echo "skip"
+      script: echo "current branch is ${BRANCH}"
+      if: $TRAVIS_BRANCH = hw02_unpack_string
+
+    - stage: "Tests"
       name: "go get"
       install: echo "skip"
       script: go get "github.com/${TRAVIS_REPO_SLUG}/${BRANCH}"
