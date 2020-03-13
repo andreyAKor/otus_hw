@@ -31,12 +31,6 @@ stages:
 jobs:
   include:
     - stage: "Tests"
-      name: "test travis #1"
-      install: echo "skip"
-      script: echo "current branch is ${BRANCH}"
-      if: env("BRANCH") != hw12_13_14_15_calendar
-
-    - stage: "Tests"
       name: "go get"
       install: echo "skip"
       script: go get "github.com/${TRAVIS_REPO_SLUG}/${BRANCH}"
