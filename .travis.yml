@@ -31,12 +31,22 @@ stages:
 jobs:
   include:
     - stage: "Tests"
+      name: "Test branch #4"
+      script: echo "current branch is ${BRANCH}"
+      if: BRANCH == "master"
+
+    - stage: "Tests"
+      name: "Test branch #3"
+      script: echo "current branch is ${BRANCH}"
+      if: branch == "master"
+
+    - stage: "Tests"
       name: "Test branch #2"
       script: echo "current branch is ${BRANCH}"
       if: branch == ""
 
     - stage: "Tests"
-      name: "Test branch"
+      name: "Test branch #1"
       script: echo "current branch is ${BRANCH}"
       if: branch == hw02_unpack_string
 
