@@ -15,6 +15,44 @@ type test struct {
 func TestUnpack(t *testing.T) {
 	for _, tst := range [...]test{
 		{
+			input:    "4a5b",
+			expected: "",
+			err:      ErrInvalidString,
+		},
+		{
+			input:    "a",
+			expected: "a",
+		},
+		{
+			input:    "a9",
+			expected: "aaaaaaaaa",
+		},
+		{
+			input:    "a0b1",
+			expected: "ab",
+		},
+		{
+			input:    "a-1b-2c+3",
+			expected: "a-b--c+++",
+		},
+		{
+			input:    "*@0&1%2♬♬3",
+			expected: "*@&%%♬♬♬♬",
+		},
+		{
+			input:    string('0'),
+			expected: "",
+			err:      ErrInvalidString,
+		},
+		{
+			input:    string(0x0),
+			expected: string(0x0),
+		},
+		{
+			input:    string(0x0 - 1),
+			expected: string(0x0 - 1),
+		},
+		{
 			input:    "a4bc2d5e",
 			expected: "aaaabccddddde",
 		},
