@@ -58,8 +58,9 @@ jobs:
       install: echo "skip"
       script: ./test.sh
       if: |
-        env("BRANCH") IN (hw07_file_copying,  \
-        hw08_envdir_tool,   \
+        env("BRANCH") IN ( \
+        hw07_file_copying, \
+        hw08_envdir_tool, \
         hw11_telnet_client)
 
     - stage: "Tests"
