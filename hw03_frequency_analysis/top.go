@@ -33,7 +33,7 @@ func Top10(s string) []string {
 		return chartStats[i].count > chartStats[j].count
 	})
 
-	var res []string
+	res := []string{}
 
 	limit := topSize
 	if limit > len(chartStats) {
