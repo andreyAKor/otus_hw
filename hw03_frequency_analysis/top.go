@@ -35,12 +35,13 @@ func Top10(s string) []string {
 
 	var res []string
 
-	for i := 0; i < len(chartStats); i++ {
-		if i == topSize {
-			break
-		}
+	limit := topSize
+	if limit > len(chartStats) {
+		limit = len(chartStats)
+	}
 
-		res = append(res, chartStats[i].word)
+	for _, cs := range chartStats[:limit] {
+		res = append(res, cs.word)
 	}
 
 	return res
