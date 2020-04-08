@@ -85,11 +85,6 @@ func (l *list) Remove(i *Item) {
 		return
 	}
 
-	l.remove(i)
-	l.size--
-}
-
-func (l *list) remove(i *Item) {
 	if i.Prev != nil {
 		i.Prev.Next = i.Next
 	} else {
@@ -100,6 +95,8 @@ func (l *list) remove(i *Item) {
 	} else {
 		l.front = i.Prev
 	}
+
+	l.size--
 }
 
 // переместить элемент в начало
@@ -108,12 +105,8 @@ func (l *list) MoveToFront(i *Item) {
 		return
 	}
 
-	l.remove(i)
-
-	l.front.Next = i
-	i.Prev = l.front
-	i.Next = nil
-	l.front = i
+	l.Remove(i)
+	l.PushFront(i.Value)
 }
 
 func NewList() List {
