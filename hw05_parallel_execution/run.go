@@ -29,6 +29,7 @@ func Run(tasks []Task, n int, m int) error {
 	for _, task := range tasks {
 		select {
 		case <-doneCh:
+			wg.Wait()
 			return ErrErrorsLimitExceeded
 		case taskCh <- task:
 		}

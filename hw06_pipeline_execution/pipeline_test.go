@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"go.uber.org/goleak"
 )
 
 const (
@@ -14,6 +15,8 @@ const (
 )
 
 func TestPipeline(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
 	// Stage generator
 	g := func(name string, f func(v I) I) Stage {
 		return func(in In) Out {
@@ -69,7 +72,8 @@ func TestPipeline(t *testing.T) {
 		// Abort after 200ms
 		abortDur := sleepPerStage * 2
 		go func() {
-			done <- <-time.After(abortDur)
+			<-time.After(abortDur)
+			close(done)
 		}()
 
 		go func() {
