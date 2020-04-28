@@ -48,4 +48,44 @@ func TestList(t *testing.T) {
 		}
 		require.Equal(t, []int{50, 30, 10, 40, 60, 80, 70}, elems)
 	})
+
+	t.Run("additional complex", func(t *testing.T) {
+		l := NewList()
+
+		l.Remove(l.Back()) // []
+		require.Equal(t, 0, l.Len())
+
+		l.Remove(l.Front()) // []
+		require.Equal(t, 0, l.Len())
+
+		l.PushBack(nil)    // [nil]
+		l.PushFront(10)    // [10, nil]
+		l.PushFront(20.56) // [20.56, 10, nil]
+		l.PushBack('\n')   // [20.56, 10, nil, '\n']
+		l.PushBack("mumu") // [20.56, 10, nil, '\n', "mumu"]
+		require.Equal(t, 5, l.Len())
+
+		l.Remove(nil)
+		require.Equal(t, 5, l.Len())
+
+		l.MoveToFront(nil)
+		require.Equal(t, 5, l.Len())
+		require.Equal(t, 20.56, l.Front().Value)
+		require.Equal(t, "mumu", l.Back().Value)
+
+		l.Remove(l.Back()) // [20.56, 10, nil, '\n']
+		require.Equal(t, 4, l.Len())
+
+		l.Remove(l.Front()) // [10, nil, '\n']
+		require.Equal(t, 3, l.Len())
+
+		l.Remove(l.Back()) // [10, nil]
+		require.Equal(t, 2, l.Len())
+
+		l.Remove(l.Front()) // [nil]
+		require.Equal(t, 1, l.Len())
+
+		l.Remove(l.Back()) // []
+		require.Equal(t, 0, l.Len())
+	})
 }
