@@ -61,42 +61,6 @@ func TestPipeline(t *testing.T) {
 			int64(sleepPerStage)*int64(len(stages)+len(data)-1)+int64(fault))
 	})
 
-	t.Run("empty stages case", func(t *testing.T) {
-		in := make(Bi)
-
-		stages := []Stage{}
-
-		result := make([]string, 0, 10)
-		for s := range ExecutePipeline(in, nil, stages...) {
-			result = append(result, s.(string))
-		}
-
-		require.Equal(t, result, []string{})
-	})
-
-	t.Run("one stage case", func(t *testing.T) {
-		in := make(Bi)
-		data := []int{1, 2, 3, 4, 5}
-
-		go func() {
-			for _, v := range data {
-				in <- v
-			}
-			close(in)
-		}()
-
-		stages := []Stage{
-			g("Multiplier (* 3)", func(v I) I { return v.(int) * 3 }),
-		}
-
-		result := make([]int, 0, 10)
-		for s := range ExecutePipeline(in, nil, stages...) {
-			result = append(result, s.(int))
-		}
-
-		require.Equal(t, result, []int{3, 6, 9, 12, 15})
-	})
-
 	t.Run("done case", func(t *testing.T) {
 		in := make(Bi)
 		done := make(Bi)
