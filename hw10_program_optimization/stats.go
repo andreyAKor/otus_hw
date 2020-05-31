@@ -1,7 +1,7 @@
 package hw10_program_optimization //nolint:golint,stylecheck
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -9,14 +9,15 @@ import (
 	"strings"
 )
 
+//go:generate easyjson -all
 type User struct {
-	ID       int
-	Name     string
-	Username string
+	ID       int    `json:"-"`
+	Name     string `json:"-"`
+	Username string `json:"-"`
 	Email    string
-	Phone    string
-	Password string
-	Address  string
+	Phone    string `json:"-"`
+	Password string `json:"-"`
+	Address  string `json:"-"`
 }
 
 type DomainStat map[string]int
@@ -37,30 +38,25 @@ func getUsers(r io.Reader) (result users, err error) {
 		return
 	}
 
-	lines := strings.Split(string(content), "\n")
+	lines := bytes.SplitN(content, []byte("\n"), len(result))
 	for i, line := range lines {
 		var user User
-		if err = json.Unmarshal([]byte(line), &user); err != nil {
+		if err = user.UnmarshalJSON(line); err != nil {
 			return
 		}
 		result[i] = user
 	}
+
 	return
 }
 
 func countDomains(u users, domain string) (DomainStat, error) {
 	result := make(DomainStat)
+	re := regexp.MustCompile("\\." + domain)
 
 	for _, user := range u {
-		matched, err := regexp.Match("\\."+domain, []byte(user.Email))
-		if err != nil {
-			return nil, err
-		}
-
-		if matched {
-			num := result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])]
-			num++
-			result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])] = num
+		if re.Match([]byte(user.Email)) {
+			result[strings.ToLower(strings.SplitN(user.Email, "@", 2)[1])]++
 		}
 	}
 	return result, nil
