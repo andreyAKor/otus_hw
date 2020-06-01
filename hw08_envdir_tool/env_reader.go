@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
 )
 
@@ -27,7 +27,7 @@ func ReadDir(dir string) (Environment, error) {
 			continue
 		}
 
-		content, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", dir, file.Name()))
+		content, err := ioutil.ReadFile(filepath.Join(dir, file.Name()))
 		if err != nil {
 			return env, err
 		}
