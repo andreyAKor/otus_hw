@@ -1,10 +1,13 @@
 package hw10_program_optimization //nolint:golint,stylecheck
 
 import (
-	"bytes"
+	"bufio"
+	//"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
+
+	//"io/ioutil"
+	"errors"
 	"regexp"
 	"strings"
 )
@@ -33,13 +36,18 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 type users [100_000]User
 
 func getUsers(r io.Reader) (result users, err error) {
-	content, err := ioutil.ReadAll(r)
-	if err != nil {
-		return
-	}
+	var line []byte
+	br := bufio.NewReader(r)
+	for i := 0; ; i++ {
+		line, _, err = br.ReadLine()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				err = nil
+				break
+			}
+			return
+		}
 
-	lines := bytes.SplitN(content, []byte("\n"), len(result))
-	for i, line := range lines {
 		var user User
 		if err = user.UnmarshalJSON(line); err != nil {
 			return

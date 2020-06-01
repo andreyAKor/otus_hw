@@ -4,7 +4,6 @@ package hw10_program_optimization //nolint:golint,stylecheck
 
 import (
 	"bytes"
-	"io"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -41,8 +40,9 @@ func TestGetDomainStat(t *testing.T) {
 
 func TestGetUsers(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
-		_, err := getUsers(bytes.NewBufferString(""))
-		require.EqualError(t, io.EOF, err.Error())
+		res, err := getUsers(bytes.NewBufferString(""))
+		require.NoError(t, err)
+		require.Equal(t, "", res[0].Email)
 	})
 	t.Run("with data", func(t *testing.T) {
 		data := `{"Id":1,"Name":"Howard Mendoza","Username":"0Oliver","Email":"aliquid_qui_ea@Browsedrive.gov","Phone":"6-866-899-36-79","Password":"InAQJvsq","Address":"Blackbird Place 25"}`
