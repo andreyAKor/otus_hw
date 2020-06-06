@@ -1,0 +1,11 @@
+logging:
+  file: "/home/andreyakor/Документы/OTUS/Разработчик Golang/Домашки/hw12_13_14_15_calendar.log"
+  level: "debug"
+
+database:
+  dsn: "host=127.0.0.1 port=5432 password=calend123 user=calend dbname=calendar sslmode=disable"
+  type: "db"
+
+http:
+  host: "0.0.0.0"
+  port: 5080
