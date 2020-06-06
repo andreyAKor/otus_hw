@@ -24,7 +24,6 @@ func New(r repository.EventsRepo, host string, port int) (*App, error) {
 	return &App{r, host, port}, nil
 }
 
-// nolint:funlen
 func (a *App) Run(ctx context.Context) error {
 	// Running application http-server.
 	mux := http.NewServeMux()
