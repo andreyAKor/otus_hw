@@ -11,7 +11,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-var _ repository.DbEventsRepo = (*Repo)(nil)
+var _ repository.DBEventsRepo = (*Repo)(nil)
 
 type Repo struct {
 	db *sql.DB

@@ -24,7 +24,7 @@ type EventsRepo interface {
 	GetListByMonth(ctx context.Context, start time.Time) ([]Event, error)
 }
 
-type DbEventsRepo interface {
+type DBEventsRepo interface {
 	Connect(ctx context.Context, dsn string) error
 	Close() error
 

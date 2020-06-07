@@ -82,6 +82,8 @@ func (a *App) Hello(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+var _ http.ResponseWriter = (*appResponseWriter)(nil)
+
 // App wrapper over http.ResponseWriter.
 type appResponseWriter struct {
 	http.ResponseWriter
