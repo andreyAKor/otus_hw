@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
