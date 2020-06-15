@@ -58,15 +58,15 @@ RETURNING id`
 }
 
 // Update event by id.
-func (r *Repo) Update(ctx context.Context, id int64, ev repository.Event) (err error) {
-	if err = r.searchDublicate(
+func (r *Repo) Update(ctx context.Context, id int64, ev repository.Event) error {
+	if err := r.searchDublicate(
 		ctx,
 		`SELECT id FROM events WHERE "date" = $1 AND user_id = $2 AND id != $3`,
 		ev.Date.Format("2006-01-02 15:04:00 -0700"),
 		ev.UserID,
 		id,
 	); err != nil {
-		return
+		return err
 	}
 
 	query := `UPDATE events
@@ -82,16 +82,19 @@ WHERE id = $7`
 		"now()",
 		id,
 	)
+	if err != nil {
+		return err
+	}
 
 	ra, err := res.RowsAffected()
 	if err != nil {
-		return
+		return err
 	}
 	if ra == 0 {
 		return repository.ErrNotFound
 	}
 
-	return
+	return nil
 }
 
 // Delete event by id.
