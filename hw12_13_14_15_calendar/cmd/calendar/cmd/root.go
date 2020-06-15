@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/configs"
@@ -80,12 +78,6 @@ func run(cmd *cobra.Command, args []string) error {
 	if err := a.Run(ctx); err != nil {
 		log.Fatal().Err(errors.Wrap(err, "app running fail")).Send()
 	}
-
-	// Graceful shutdown
-	interruptCh := make(chan os.Signal, 1)
-	signal.Notify(interruptCh, os.Interrupt, syscall.SIGTERM)
-
-	<-interruptCh
 
 	return nil
 }
