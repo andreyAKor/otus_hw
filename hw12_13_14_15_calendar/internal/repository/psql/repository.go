@@ -32,23 +32,25 @@ func (r *Repo) Close() error {
 }
 
 // Add new event.
-func (r *Repo) Create(ctx context.Context, ev repository.Event) (eventID int64, err error) {
+func (r *Repo) Create(ctx context.Context, ev repository.Event) (int64, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return eventID, err
+		return 0, err
 	}
 	defer func() {
-		err = tx.Rollback()
+		_ = tx.Rollback()
 	}()
 
-	if err = r.searchDublicate(
+	if err := r.searchDublicate(
 		ctx, tx,
 		`SELECT id FROM events WHERE "date" = $1 AND user_id = $2`,
 		ev.Date.Format("2006-01-02 15:04:00 -0700"),
 		ev.UserID,
 	); err != nil {
-		return eventID, err
+		return 0, err
 	}
+
+	var eventID int64
 
 	query := `INSERT INTO
 events (title, "date", duration, descr, user_id, duration_start)
@@ -64,63 +66,67 @@ RETURNING id`
 		ev.DurationStart,
 	).Scan(&eventID)
 	if err != nil {
-		return eventID, err
+		return 0, err
 	}
 
-	if err = tx.Commit(); err != nil {
-		return eventID, err
+	if err := tx.Commit(); err != nil {
+		return 0, err
 	}
 
 	return eventID, nil
 }
 
 // Update event by id.
-func (r *Repo) Update(ctx context.Context, id int64, ev repository.Event) (err error) {
+func (r *Repo) Update(ctx context.Context, id int64, ev repository.Event) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return
+		return err
 	}
 	defer func() {
-		err = tx.Rollback()
+		_ = tx.Rollback()
 	}()
 
-	if err = r.searchDublicate(
+	if err := r.searchDublicate(
 		ctx, tx,
 		`SELECT id FROM events WHERE "date" = $1 AND user_id = $2 AND id != $3`,
 		ev.Date.Format("2006-01-02 15:04:00 -0700"),
 		ev.UserID,
 		id,
 	); err != nil {
-		return
+		return err
 	}
 
 	query := `UPDATE events
-SET title = $1, "date" = $2, duration = $3, descr = $4, duration_start = $5, updated_at = $6
-WHERE id = $7`
+SET title = $1, "date" = $2, duration = $3, descr = $4, user_id = $5, duration_start = $6, updated_at = $7
+WHERE id = $8`
 	res, err := tx.ExecContext(
 		ctx, query,
 		ev.Title,
 		ev.Date,
 		ev.Duration,
 		ev.Descr,
+		ev.UserID,
 		ev.DurationStart,
 		"now()",
 		id,
 	)
+	if err != nil {
+		return err
+	}
 
 	ra, err := res.RowsAffected()
 	if err != nil {
-		return
+		return err
 	}
 	if ra == 0 {
 		return repository.ErrNotFound
 	}
 
-	if err = tx.Commit(); err != nil {
-		return
+	if err := tx.Commit(); err != nil {
+		return err
 	}
 
-	return
+	return nil
 }
 
 // Delete event by id.

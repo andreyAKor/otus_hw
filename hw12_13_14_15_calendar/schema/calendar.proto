@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+
+option go_package="schema";
+
+service Calendar {
+	rpc Create(CreateRpcRequest) returns (CreateRpcResponse) {};
+	rpc Update(UpdateRpcRequest) returns (google.protobuf.Empty) {};
+	rpc Delete(DeleteRpcRequest) returns (google.protobuf.Empty) {};
+	rpc GetListByDate(GetListByDateRpcRequest) returns (GetListByDateRpcResponse) {};
+	rpc GetListByWeek(GetListByWeekRpcRequest) returns (GetListByWeekRpcResponse) {};
+	rpc GetListByMonth(GetListByMonthRpcRequest) returns (GetListByMonthRpcResponse) {};
+}
+
+message Event {
+	string title = 1;
+	google.protobuf.Timestamp date = 2;
+	google.protobuf.Duration duration = 3;
+	string descr = 4;
+	int64 userID = 5;
+	google.protobuf.Duration durationStart = 6;
+}
+
+// Create
+message CreateRpcRequest {
+	Event event = 1;
+}
+
+message CreateRpcResponse {
+	int64 id = 1;
+}
+
+// Update
+message UpdateRpcRequest {
+	int64 id = 1;
+	Event event = 2;
+}
+
+// Delete
+message DeleteRpcRequest {
+	int64 id = 1;
+}
+
+// GetListByDate
+message GetListByDateRpcRequest {
+	google.protobuf.Timestamp date = 1;
+}
+
+message GetListByDateRpcResponse {
+	repeated Event event = 1;
+}
+
+// GetListByWeek
+message GetListByWeekRpcRequest {
+	google.protobuf.Timestamp start = 1;
+}
+
+message GetListByWeekRpcResponse {
+	repeated Event event = 1;
+}
+
+// GetListByMonth
+message GetListByMonthRpcRequest {
+	google.protobuf.Timestamp start = 1;
+}
+
+message GetListByMonthRpcResponse {
+	repeated Event event = 1;
+}
