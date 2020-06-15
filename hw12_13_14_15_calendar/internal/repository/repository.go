@@ -2,43 +2,36 @@ package repository
 
 import (
 	"context"
-	"time"
+	"strings"
+
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/memory"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/psql"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
 
 	"github.com/pkg/errors"
 )
 
 var (
-	ErrTimeBusy = errors.New("event at this time is busy")
-	ErrNotFound = errors.New("event not found")
+	ErrUnknowDatabaseType = errors.New("unknow database type")
 )
 
-type EventsRepo interface {
-	Create(ctx context.Context, ev Event) (int64, error)
-	Update(ctx context.Context, id int64, ev Event) error
+// Init database.
+func New(ctx context.Context, t, dsn string) (repository.EventsRepo, error) {
+	// Init database type
+	var r repository.EventsRepo
 
-	Delete(ctx context.Context, id int64) error
-	DeleteOld(ctx context.Context) error
+	switch strings.ToLower(t) {
+	case "memory":
+		r = new(memory.Repo)
+	case "db":
+		rsql := new(psql.Repo)
+		if err := rsql.Connect(ctx, dsn); err != nil {
+			return nil, errors.Wrap(err, "connection error")
+		}
+		r = rsql
+	default:
+		return nil, ErrUnknowDatabaseType
+	}
 
-	GetListByDate(ctx context.Context, date time.Time) ([]Event, error)
-	GetListByWeek(ctx context.Context, start time.Time) ([]Event, error)
-	GetListByMonth(ctx context.Context, start time.Time) ([]Event, error)
-}
-
-type DBEventsRepo interface {
-	Connect(ctx context.Context, dsn string) error
-	Close() error
-
-	EventsRepo
-}
-
-type Event struct {
-	ID            int64
-	Title         string
-	Date          time.Time
-	Duration      time.Duration
-	Descr         *string
-	UserID        int64
-	DurationStart *time.Duration
-	CreatedAt     time.Time
-	UpdatedAt     *time.Time
+	return r, nil
 }

@@ -42,7 +42,7 @@ func TestUpdate(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("event at this time is busy", func(t *testing.T) {
-		r := Repo{}
+		var r Repo
 
 		date := time.Now()
 		ev := repository.Event{Date: date}
@@ -61,7 +61,7 @@ func TestUpdate(t *testing.T) {
 		require.Equal(t, repository.ErrTimeBusy, err)
 	})
 	t.Run("fail on context cancel", func(t *testing.T) {
-		r := Repo{}
+		var r Repo
 
 		date := time.Now()
 		ev := repository.Event{Date: date}
@@ -76,7 +76,7 @@ func TestUpdate(t *testing.T) {
 		require.Equal(t, context.Canceled, err)
 	})
 	t.Run("event not found", func(t *testing.T) {
-		r := Repo{}
+		var r Repo
 
 		err := r.Update(ctx, 1, repository.Event{})
 		require.Equal(t, repository.ErrNotFound, err)
@@ -96,7 +96,7 @@ func TestDelete(t *testing.T) {
 		require.NoError(t, err)
 	})
 	t.Run("event not found", func(t *testing.T) {
-		r := Repo{}
+		var r Repo
 
 		err := r.Delete(ctx, 1)
 		require.Equal(t, repository.ErrNotFound, err)
@@ -107,7 +107,7 @@ func TestDeleteOld(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("normal", func(t *testing.T) {
-		r := Repo{}
+		var r Repo
 
 		date := time.Now().AddDate(-1, 0, 0).Add(-time.Second)
 
@@ -135,7 +135,7 @@ func TestGetListByDate(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("normal", func(t *testing.T) {
-		r := Repo{}
+		var r Repo
 
 		date := time.Now()
 		ev := repository.Event{ID: 1, Date: date, UserID: 1}
@@ -163,7 +163,7 @@ func TestGetListByWeek(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("normal", func(t *testing.T) {
-		r := Repo{}
+		var r Repo
 
 		date := time.Now()
 		evList := []repository.Event{
@@ -229,15 +229,17 @@ func TestForeachList(t *testing.T) {
 }
 
 func TestMemoryRepoMultithreading(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	r := Repo{}
+	var (
+		r  Repo
+		wg sync.WaitGroup
+	)
 
 	date := time.Now()
 
-	wg := &sync.WaitGroup{}
-	wg.Add(7)
-
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for i := 0; i < 10_000; i++ {
@@ -246,6 +248,8 @@ func TestMemoryRepoMultithreading(t *testing.T) {
 			})
 		}
 	}()
+
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for i := int64(0); i < 10_000; i++ {
@@ -254,30 +258,40 @@ func TestMemoryRepoMultithreading(t *testing.T) {
 			})
 		}
 	}()
+
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for i := int64(0); i < 10_000; i++ {
 			_ = r.Delete(ctx, i)
 		}
 	}()
+
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for i := 0; i < 10_000; i++ {
 			_ = r.DeleteOld(ctx)
 		}
 	}()
+
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for i := 0; i < 10_000; i++ {
 			_, _ = r.GetListByDate(ctx, date)
 		}
 	}()
+
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for i := 0; i < 10_000; i++ {
 			_, _ = r.GetListByWeek(ctx, date)
 		}
 	}()
+
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		for i := 0; i < 10_000; i++ {
@@ -289,7 +303,7 @@ func TestMemoryRepoMultithreading(t *testing.T) {
 }
 
 func initWithOneEvent(t *testing.T, ctx context.Context) (Repo, time.Time) {
-	r := Repo{}
+	var r Repo
 
 	date := time.Now()
 

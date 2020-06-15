@@ -7,11 +7,11 @@ build:
 	go build -ldflags="-s -w" -o '$(GOBIN)/$(PROJECTNAME)' ./cmd/$(PROJECTNAME)/main.go || exit
 
 run:
-	go build -o '$(GOBIN)/$(PROJECTNAME)' ./cmd/$(PROJECTNAME)/main.go || exit
+	go build -o '$(GOBIN)/$(PROJECTNAME)' ./cmd/$(PROJECTNAME)/main.go
 	'$(GOBIN)/$(PROJECTNAME)' --config='$(GOBASE)/configs/$(PROJECTNAME).yml'
 
 test:
-	go test -v -count=1 -race -gcflags=-l -timeout=30s ./...
+	go test -v -count=1 -race -timeout=30s ./...
 
 install-deps:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint

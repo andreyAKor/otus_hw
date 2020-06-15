@@ -3,7 +3,7 @@
 CREATE TABLE events (
 	id serial NOT NULL,
 	title varchar(255) NOT NULL,
-	"date" timestamptz NOT NULL,
+	date timestamptz NOT NULL,
 	duration int8 NOT NULL,
 	descr text NULL,
 	user_id int4 NOT NULL,

@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
 
 	// Import Postgres sql driver
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -33,28 +33,12 @@ func (r *Repo) Close() error {
 
 // Add new event.
 func (r *Repo) Create(ctx context.Context, ev repository.Event) (eventID int64, err error) {
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return eventID, err
-	}
-	defer func() {
-		err = tx.Rollback()
-	}()
-
-	if err = r.searchDublicate(
-		ctx, tx,
-		`SELECT id FROM events WHERE "date" = $1 AND user_id = $2`,
-		ev.Date.Format("2006-01-02 15:04:00 -0700"),
-		ev.UserID,
-	); err != nil {
-		return eventID, err
-	}
-
 	query := `INSERT INTO
 events (title, "date", duration, descr, user_id, duration_start)
 VALUES ($1, $2, $3, $4, $5, $6)
+ON CONFLICT (user_id, date) DO NOTHING
 RETURNING id`
-	err = tx.QueryRowContext(
+	err = r.db.QueryRowContext(
 		ctx, query,
 		ev.Title,
 		ev.Date.Format("2006-01-02 15:04:00 -0700"),
@@ -64,11 +48,10 @@ RETURNING id`
 		ev.DurationStart,
 	).Scan(&eventID)
 	if err != nil {
-		return eventID, err
-	}
-
-	if err = tx.Commit(); err != nil {
-		return eventID, err
+		if err == sql.ErrNoRows {
+			err = repository.ErrTimeBusy
+		}
+		return
 	}
 
 	return eventID, nil
@@ -76,16 +59,8 @@ RETURNING id`
 
 // Update event by id.
 func (r *Repo) Update(ctx context.Context, id int64, ev repository.Event) (err error) {
-	tx, err := r.db.BeginTx(ctx, nil)
-	if err != nil {
-		return
-	}
-	defer func() {
-		err = tx.Rollback()
-	}()
-
 	if err = r.searchDublicate(
-		ctx, tx,
+		ctx,
 		`SELECT id FROM events WHERE "date" = $1 AND user_id = $2 AND id != $3`,
 		ev.Date.Format("2006-01-02 15:04:00 -0700"),
 		ev.UserID,
@@ -97,7 +72,7 @@ func (r *Repo) Update(ctx context.Context, id int64, ev repository.Event) (err e
 	query := `UPDATE events
 SET title = $1, "date" = $2, duration = $3, descr = $4, duration_start = $5, updated_at = $6
 WHERE id = $7`
-	res, err := tx.ExecContext(
+	res, err := r.db.ExecContext(
 		ctx, query,
 		ev.Title,
 		ev.Date,
@@ -114,10 +89,6 @@ WHERE id = $7`
 	}
 	if ra == 0 {
 		return repository.ErrNotFound
-	}
-
-	if err = tx.Commit(); err != nil {
-		return
 	}
 
 	return
@@ -239,10 +210,10 @@ func (r *Repo) prepareRowsEvents(rows *sql.Rows) ([]repository.Event, error) {
 }
 
 // Search dublicate events by date.
-func (r *Repo) searchDublicate(ctx context.Context, tx *sql.Tx, query string, args ...interface{}) error {
+func (r *Repo) searchDublicate(ctx context.Context, query string, args ...interface{}) error {
 	var id int64
 
-	err := tx.QueryRowContext(ctx, query, args...).Scan(&id)
+	err := r.db.QueryRowContext(ctx, query, args...).Scan(&id)
 	if err == sql.ErrNoRows {
 		return nil
 	} else if err != nil {

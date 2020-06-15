@@ -2,6 +2,7 @@ package logging
 
 import (
 	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -26,7 +27,7 @@ func (l *Log) Init() error {
 
 	l.file, err = os.OpenFile(l.filepath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		return errors.Wrapf(err, "error opening file \"%v\"", l.filepath)
+		return errors.Wrapf(err, "error creating file %q", l.filepath)
 	}
 
 	// Pretty logging to console
@@ -39,7 +40,7 @@ func (l *Log) Init() error {
 	log.Logger = zerolog.New(multi).With().Timestamp().Caller().Logger()
 
 	// Set log level. Default level in Zerolog is debug
-	switch l.level {
+	switch strings.ToLower(l.level) {
 	case "debug":
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	case "info":
