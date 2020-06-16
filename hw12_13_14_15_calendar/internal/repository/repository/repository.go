@@ -13,6 +13,7 @@ var (
 	ErrNotFound = errors.New("event not found")
 )
 
+//go:generate mockgen -source=$GOFILE -destination ./mocks/mock_events_repo.go -package mocks EventsRepo
 type EventsRepo interface {
 	Create(ctx context.Context, ev Event) (int64, error)
 	Update(ctx context.Context, id int64, ev Event) error

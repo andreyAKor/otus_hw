@@ -7,6 +7,8 @@ import (
 
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/app"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/configs"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/grpc"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/http"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/logging"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository"
 	repo "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
@@ -70,13 +72,25 @@ func run(cmd *cobra.Command, args []string) error {
 		defer v.Close()
 	}
 
-	// Init and run app
-	a, err := app.New(r, c.HTTP.Host, c.HTTP.Port)
+	// Init http-server
+	httpSrv, err := http.New(r, c.HTTP.Host, c.HTTP.Port)
 	if err != nil {
-		log.Fatal().Err(errors.Wrap(err, "can't initialize app")).Send()
+		log.Fatal().Err(err).Msg("can't initialize http-server")
+	}
+
+	// Init grpc-server
+	grpcSrv, err := grpc.New(r, c.GRPC.Host, c.GRPC.Port)
+	if err != nil {
+		log.Fatal().Err(err).Msg("can't initialize grpc-server")
+	}
+
+	// Init and run app
+	a, err := app.New(httpSrv, grpcSrv)
+	if err != nil {
+		log.Fatal().Err(err).Msg("can't initialize app")
 	}
 	if err := a.Run(ctx); err != nil {
-		log.Fatal().Err(errors.Wrap(err, "app running fail")).Send()
+		log.Fatal().Err(err).Msg("app runnign fail")
 	}
 
 	return nil

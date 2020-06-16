@@ -45,6 +45,15 @@ type Config struct {
 		// Port
 		Port int
 	}
+
+	// GRPC-server settings
+	GRPC struct {
+		// Host
+		Host string
+
+		// Port
+		Port int
+	}
 }
 
 // Init is using to initialize the configs.
