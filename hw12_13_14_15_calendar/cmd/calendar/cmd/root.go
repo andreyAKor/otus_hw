@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/app"
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/configs"
+	app "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/app/calendar"
+	configsCalendar "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/configs/calendar"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/grpc"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/http"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/logging"
@@ -23,8 +23,8 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:   "calendar",
-	Short: "Calendar service application",
-	Long:  "The Calendar service is the most simplified service for storing calendar events and sending notifications.",
+	Short: "Calendar API service application",
+	Long:  "The Calendar API service is the most simplified service for storing calendar events and sending notifications.",
 	RunE:  run,
 }
 
@@ -51,8 +51,8 @@ func run(cmd *cobra.Command, args []string) error {
 	defer cancel()
 
 	// Init config
-	c, err := configs.Init(cfgFile)
-	if err != nil {
+	c := new(configsCalendar.Config)
+	if err := c.Init(cfgFile); err != nil {
 		return errors.Wrap(err, "init config failed")
 	}
 
