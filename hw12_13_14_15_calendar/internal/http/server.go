@@ -11,13 +11,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/calendar"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
-
-var _ io.Closer = (*Server)(nil)
 
 const (
 	limitReadBody int64 = 1024 * 10
@@ -27,18 +25,20 @@ var (
 	ErrInvalidRequest = errors.New("the request body can’t be pasred as valid data")
 )
 
+var _ io.Closer = (*Server)(nil)
+
 type Server struct {
-	r      repository.EventsRepo
-	host   string
-	port   int
-	server *http.Server
+	calendar calendar.Calendarer
+	host     string
+	port     int
+	server   *http.Server
 }
 
-func New(r repository.EventsRepo, host string, port int) (*Server, error) {
+func New(calendar calendar.Calendarer, host string, port int) (*Server, error) {
 	return &Server{
-		r:    r,
-		host: host,
-		port: port,
+		calendar: calendar,
+		host:     host,
+		port:     port,
 	}, nil
 }
 

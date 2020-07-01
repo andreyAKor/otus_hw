@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository"
 
 	"github.com/pkg/errors"
 )
@@ -17,7 +17,7 @@ func (s *Server) delete(w http.ResponseWriter, r *http.Request) (interface{}, er
 		return nil, errors.Wrap(err, `"id" parsing fail`)
 	}
 
-	if err := s.r.Delete(r.Context(), int64(id)); err != nil {
+	if err := s.calendar.Delete(r.Context(), int64(id)); err != nil {
 		switch err {
 		case repository.ErrNotFound:
 			w.WriteHeader(http.StatusNotFound)

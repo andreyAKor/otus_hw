@@ -15,7 +15,7 @@ func (s *Server) GetListByDate(ctx context.Context, req *schema.GetListByDateRpc
 		return nil, ErrDateNotSet
 	}
 
-	events, err := s.r.GetListByDate(ctx, time.Unix(req.Date.Seconds, int64(req.Date.Nanos)))
+	events, err := s.calendar.GetListByDate(ctx, time.Unix(req.Date.Seconds, int64(req.Date.Nanos)))
 	if err != nil {
 		return nil, errors.Wrap(err, "can't get events list by date")
 	}

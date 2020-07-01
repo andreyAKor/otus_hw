@@ -19,7 +19,7 @@ func (s *Server) getListByWeek(w http.ResponseWriter, r *http.Request) (interfac
 		return nil, errors.Wrap(err, `"start" parsing fail`)
 	}
 
-	events, err := s.r.GetListByWeek(r.Context(), start)
+	events, err := s.calendar.GetListByWeek(r.Context(), start)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return nil, errors.Wrap(err, "can't get events list by week")

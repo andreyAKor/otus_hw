@@ -15,7 +15,7 @@ func (s *Server) GetListByMonth(ctx context.Context, req *schema.GetListByMonthR
 		return nil, ErrStartNotSet
 	}
 
-	events, err := s.r.GetListByMonth(ctx, time.Unix(req.Start.Seconds, int64(req.Start.Nanos)))
+	events, err := s.calendar.GetListByMonth(ctx, time.Unix(req.Start.Seconds, int64(req.Start.Nanos)))
 	if err != nil {
 		return nil, errors.Wrap(err, "can't get events list by month")
 	}

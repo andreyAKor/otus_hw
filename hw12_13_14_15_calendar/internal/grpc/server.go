@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/calendar"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/schema"
 
 	"github.com/pkg/errors"
@@ -16,29 +16,30 @@ import (
 	"google.golang.org/grpc/peer"
 )
 
-var _ io.Closer = (*Server)(nil)
-
 var (
 	ErrDateNotSet  = errors.New("date not set")
 	ErrStartNotSet = errors.New("start not set")
 	ErrEventNotSet = errors.New("event request not set")
 )
 
-var _ schema.CalendarServer = (*Server)(nil)
+var (
+	_ io.Closer             = (*Server)(nil)
+	_ schema.CalendarServer = (*Server)(nil)
+)
 
 //go:generate protoc --proto_path=../../schema --go_out=plugins=grpc:../../schema ../../schema/calendar.proto
 type Server struct {
-	r      repository.EventsRepo
-	host   string
-	port   int
-	server *grpc.Server
+	calendar calendar.Calendarer
+	host     string
+	port     int
+	server   *grpc.Server
 }
 
-func New(r repository.EventsRepo, host string, port int) (*Server, error) {
+func New(calendar calendar.Calendarer, host string, port int) (*Server, error) {
 	return &Server{
-		r:    r,
-		host: host,
-		port: port,
+		calendar: calendar,
+		host:     host,
+		port:     port,
 	}, nil
 }
 
