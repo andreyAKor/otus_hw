@@ -17,6 +17,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var _ io.Closer = (*Server)(nil)
+
 const (
 	limitReadBody int64 = 1024 * 10
 )
@@ -26,13 +28,18 @@ var (
 )
 
 type Server struct {
-	r    repository.EventsRepo
-	host string
-	port int
+	r      repository.EventsRepo
+	host   string
+	port   int
+	server *http.Server
 }
 
 func New(r repository.EventsRepo, host string, port int) (*Server, error) {
-	return &Server{r, host, port}, nil
+	return &Server{
+		r:    r,
+		host: host,
+		port: port,
+	}, nil
 }
 
 // Running http-server.
@@ -50,15 +57,19 @@ func (s *Server) Run(ctx context.Context) error {
 	handler = s.body(handler)
 	handler = s.logger(handler)
 
-	server := &http.Server{
+	s.server = &http.Server{
 		Addr:    net.JoinHostPort(s.host, strconv.Itoa(s.port)),
 		Handler: handler,
 	}
-	if err := server.ListenAndServe(); err != nil {
+	if err := s.server.ListenAndServe(); err != http.ErrServerClosed {
 		return errors.Wrap(err, "http-server listen fail")
 	}
 
 	return nil
+}
+
+func (s *Server) Close() error {
+	return s.server.Shutdown(context.Background())
 }
 
 // Middleware logger output log info of request, e.g.: r.Method, r.URL etc.
