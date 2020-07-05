@@ -40,6 +40,32 @@ type Database struct {
 	Type string
 }
 
+// RabbitMQ settings
+type RMQ struct {
+	// URI connection string to RabbitMQ
+	URI string
+
+	// Exchange name
+	ExchangeName string
+
+	// Exchange type
+	ExchangeType string
+
+	// Queue name
+	QueueName string
+
+	// Message routing rules
+	BindingKey string
+
+	// Reconnection settings
+	ReConnect struct {
+		MaxElapsedTime  string
+		InitialInterval string
+		Multiplier      float64
+		MaxInterval     string
+	}
+}
+
 // Init is using to initialize the current config instance.
 func Init(file string, c Configer) (Configer, error) {
 	// read in environment variables that match

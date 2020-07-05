@@ -16,7 +16,7 @@ func (s *Server) Update(ctx context.Context, req *schema.UpdateRpcRequest) (*emp
 	}
 
 	ev := s.prepareEventRequest(req.Event)
-	if err := s.r.Update(ctx, req.Id, ev); err != nil {
+	if err := s.calendar.Update(ctx, req.Id, ev); err != nil {
 		return nil, errors.Wrap(err, "can't update event")
 	}
 

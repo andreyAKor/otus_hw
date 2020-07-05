@@ -19,7 +19,7 @@ func (s *Server) getListByDate(w http.ResponseWriter, r *http.Request) (interfac
 		return nil, errors.Wrap(err, `"date" parsing fail`)
 	}
 
-	events, err := s.r.GetListByDate(r.Context(), date)
+	events, err := s.calendar.GetListByDate(r.Context(), date)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return nil, errors.Wrap(err, "can't get events list by date")

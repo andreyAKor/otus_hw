@@ -15,7 +15,7 @@ func (s *Server) GetListByWeek(ctx context.Context, req *schema.GetListByWeekRpc
 		return nil, ErrStartNotSet
 	}
 
-	events, err := s.r.GetListByWeek(ctx, time.Unix(req.Start.Seconds, int64(req.Start.Nanos)))
+	events, err := s.calendar.GetListByWeek(ctx, time.Unix(req.Start.Seconds, int64(req.Start.Nanos)))
 	if err != nil {
 		return nil, errors.Wrap(err, "can't get events list by week")
 	}

@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/calendar"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -25,14 +25,21 @@ var (
 	ErrInvalidRequest = errors.New("the request body can’t be pasred as valid data")
 )
 
+var _ io.Closer = (*Server)(nil)
+
 type Server struct {
-	r    repository.EventsRepo
-	host string
-	port int
+	calendar calendar.Calendarer
+	host     string
+	port     int
+	server   *http.Server
 }
 
-func New(r repository.EventsRepo, host string, port int) (*Server, error) {
-	return &Server{r, host, port}, nil
+func New(calendar calendar.Calendarer, host string, port int) (*Server, error) {
+	return &Server{
+		calendar: calendar,
+		host:     host,
+		port:     port,
+	}, nil
 }
 
 // Running http-server.
@@ -50,15 +57,19 @@ func (s *Server) Run(ctx context.Context) error {
 	handler = s.body(handler)
 	handler = s.logger(handler)
 
-	server := &http.Server{
+	s.server = &http.Server{
 		Addr:    net.JoinHostPort(s.host, strconv.Itoa(s.port)),
 		Handler: handler,
 	}
-	if err := server.ListenAndServe(); err != nil {
+	if err := s.server.ListenAndServe(); err != http.ErrServerClosed {
 		return errors.Wrap(err, "http-server listen fail")
 	}
 
 	return nil
+}
+
+func (s *Server) Close() error {
+	return s.server.Shutdown(context.Background())
 }
 
 // Middleware logger output log info of request, e.g.: r.Method, r.URL etc.

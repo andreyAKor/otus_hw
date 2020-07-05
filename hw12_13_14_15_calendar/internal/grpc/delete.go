@@ -11,7 +11,7 @@ import (
 
 // Delete event.
 func (s *Server) Delete(ctx context.Context, req *schema.DeleteRpcRequest) (*empty.Empty, error) {
-	if err := s.r.Delete(ctx, req.Id); err != nil {
+	if err := s.calendar.Delete(ctx, req.Id); err != nil {
 		return nil, errors.Wrap(err, "can't delete event")
 	}
 

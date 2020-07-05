@@ -1,0 +1,20 @@
+logging:
+  file: "/home/andreyakor/Документы/OTUS/Разработчик Golang/Домашки/hw12_13_14_15_calendar_sender.log"
+  level: "debug"
+
+rmq:
+  uri: "amqp://guest:guest@localhost:5672/"
+  exchangeName: "events"
+  exchangeType: "fanout"
+  queueName: "notifications"
+  bindingKey: ""
+  reConnect:
+    maxElapsedTime: "1m"
+    initialInterval: "1s"
+    multiplier: 2.0
+    maxInterval: "15s"
+
+consumer:
+  consumerTag: "calendar_notifications_sender"
+  qosPrefetchCount: 10
+  threads: 4

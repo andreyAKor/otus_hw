@@ -4,7 +4,7 @@ GOBIN=$(GOBASE)/bin
 build:
 	go build -ldflags="-s -w" -o '$(GOBIN)/calendar' ./cmd/calendar/main.go || exit
 	go build -ldflags="-s -w" -o '$(GOBIN)/calendar_scheduler' ./cmd/calendar_scheduler/main.go || exit
-	#go build -ldflags="-s -w" -o '$(GOBIN)/calendar_sender' ./cmd/calendar_sender/main.go || exit
+	go build -ldflags="-s -w" -o '$(GOBIN)/calendar_sender' ./cmd/calendar_sender/main.go || exit
 
 run:
 	go build -o '$(GOBIN)/calendar' ./cmd/calendar/main.go

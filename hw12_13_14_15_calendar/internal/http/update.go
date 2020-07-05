@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository"
 
 	"github.com/pkg/errors"
 )
@@ -23,7 +23,7 @@ func (s *Server) update(w http.ResponseWriter, r *http.Request) (interface{}, er
 		return nil, errors.Wrap(err, `"id" parsing fail: `+r.URL.Query().Get("id"))
 	}
 
-	if err := s.r.Update(r.Context(), int64(id), *ev); err != nil {
+	if err := s.calendar.Update(r.Context(), int64(id), *ev); err != nil {
 		switch err {
 		case repository.ErrTimeBusy:
 			w.WriteHeader(http.StatusConflict)

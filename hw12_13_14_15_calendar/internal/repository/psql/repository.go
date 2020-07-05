@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository"
 
 	// Import Postgres sql driver
 	_ "github.com/jackc/pgx/v4/stdlib"

@@ -2,6 +2,7 @@ package rmq
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"github.com/cenkalti/backoff/v3"
@@ -10,30 +11,62 @@ import (
 	"github.com/streadway/amqp"
 )
 
+var _ io.Closer = (*Rmq)(nil)
+
 var (
 	ErrStopReconn = errors.New("stop reconnecting")
 )
 
 type Rmq struct {
-	conn         *amqp.Connection
-	channel      *amqp.Channel
-	done         chan error
+	conn       *amqp.Connection
+	channel    *amqp.Channel
+	connClosed chan struct{}
+
 	uri          string
 	exchangeName string
 	exchangeType string
 	queueName    string
 	bindingKey   string
+
+	reConnMaxElapsedTime  time.Duration
+	reConnInitialInterval time.Duration
+	reConnMultiplier      float64
+	reConnMaxInterval     time.Duration
 }
 
 // RabbitMQ connector.
-func New(uri, exchangeName, exchangeType, queueName, bindingKey string) (*Rmq, error) {
+func New(
+	uri, exchangeName, exchangeType, queueName, bindingKey, reConnMaxElapsedTime, reConnInitialInterval string,
+	reConnMultiplier float64,
+	reConnMaxInterval string,
+) (*Rmq, error) {
+	reConnMaxElapsedTimeDur, err := time.ParseDuration(reConnMaxElapsedTime)
+	if err != nil {
+		return nil, errors.Wrapf(err, "reconnection max elapsed time parsing fail (%s)", reConnMaxElapsedTime)
+	}
+
+	reConnInitialIntervalDur, err := time.ParseDuration(reConnInitialInterval)
+	if err != nil {
+		return nil, errors.Wrapf(err, "reconnection initial interval parsing fail (%s)", reConnInitialInterval)
+	}
+
+	reConnMaxIntervalDur, err := time.ParseDuration(reConnMaxInterval)
+	if err != nil {
+		return nil, errors.Wrapf(err, "reconnection max interval parsing fail (%s)", reConnMaxInterval)
+	}
+
 	return &Rmq{
-		done:         make(chan error),
+		connClosed:   make(chan struct{}),
 		uri:          uri,
 		exchangeName: exchangeName,
 		exchangeType: exchangeType,
 		queueName:    queueName,
 		bindingKey:   bindingKey,
+
+		reConnMaxElapsedTime:  reConnMaxElapsedTimeDur,
+		reConnInitialInterval: reConnInitialIntervalDur,
+		reConnMultiplier:      reConnMultiplier,
+		reConnMaxInterval:     reConnMaxIntervalDur,
 	}, nil
 }
 
@@ -44,21 +77,83 @@ func (r *Rmq) Init(ctx context.Context) error {
 	}
 
 	if err := r.prepareQueue(); err != nil {
-		return errors.Wrap(err, "announce queue fail")
+		return errors.Wrap(err, "preparing queue fail")
+	}
+
+	go func() {
+		stop := false
+		for !stop {
+			select {
+			case <-ctx.Done():
+				stop = true
+			case <-r.connClosed:
+				if err := r.reConnect(ctx); err != nil {
+					log.Fatal().Err(err).Msg("reconnecting error")
+				}
+			}
+		}
+	}()
+
+	return nil
+}
+
+func (r *Rmq) Close() error {
+	if err := r.channel.Close(); err != nil {
+		return err
+	}
+	if err := r.conn.Close(); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-// Reconnecting algo
-func (r *Rmq) reConnect() error {
-	be := backoff.NewExponentialBackOff()
-	be.MaxElapsedTime = time.Minute
-	be.InitialInterval = 1 * time.Second
-	be.Multiplier = 2
-	be.MaxInterval = 15 * time.Second
+func (r *Rmq) Publish(msg amqp.Publishing) error {
+	if err := r.channel.Publish(r.exchangeName, r.queueName, false, false, msg); err != nil {
+		return errors.Wrap(err, "rmq publish fail")
+	}
 
-	b := backoff.WithContext(be, context.Background())
+	return nil
+}
+
+func (r *Rmq) Consume(consumerTag string) (<-chan amqp.Delivery, error) {
+	msgsCh, err := r.channel.Consume(
+		r.queueName,
+		consumerTag,
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "rmq consume fail")
+	}
+
+	return msgsCh, nil
+}
+
+func (r *Rmq) Qos(prefetchCount int) error {
+	if err := r.channel.Qos(prefetchCount, 0, false); err != nil {
+		return errors.Wrap(err, "error setting qos")
+	}
+
+	return nil
+}
+
+func (r *Rmq) IsClosed() bool {
+	return r.conn.IsClosed()
+}
+
+// Reconnecting algo
+func (r *Rmq) reConnect(ctx context.Context) error {
+	be := backoff.NewExponentialBackOff()
+	be.MaxElapsedTime = r.reConnMaxElapsedTime
+	be.InitialInterval = r.reConnInitialInterval
+	be.Multiplier = r.reConnMultiplier
+	be.MaxInterval = r.reConnMaxInterval
+
+	b := backoff.WithContext(be, ctx)
 	for {
 		d := b.NextBackOff()
 		if d == backoff.Stop {
@@ -67,12 +162,14 @@ func (r *Rmq) reConnect() error {
 
 		select {
 		case <-time.After(d):
+			log.Warn().Str("after", d.String()).Msg("reconnection")
+
 			if err := r.connect(); err != nil {
-				log.Error().Err(err).Msg("could not connect in reconnect call")
+				log.Error().Err(err).Msg("couldn't connect in reconnect call")
 				continue
 			}
 			if err := r.prepareQueue(); err != nil {
-				log.Error().Err(err).Msg("couldn't connect")
+				log.Error().Err(err).Msg("couldn't preparing queue in reconnect call")
 				continue
 			}
 
@@ -95,10 +192,10 @@ func (r *Rmq) connect() error {
 		return errors.Wrap(err, "channel fail")
 	}
 
+	// Event for closing channel
 	go func() {
-		log.Printf("closing: %s", <-r.conn.NotifyClose(make(chan *amqp.Error)))
-		// Понимаем, что канал сообщений закрыт, надо пересоздать соединение.
-		r.done <- errors.New("Channel Closed")
+		<-r.conn.NotifyClose(make(chan *amqp.Error))
+		r.connClosed <- struct{}{}
 	}()
 
 	if err := r.channel.ExchangeDeclare(
@@ -130,14 +227,6 @@ func (r *Rmq) prepareQueue() error {
 		return errors.Wrap(err, "queue declare fail")
 	}
 
-	/*
-		// Число сообщений, которые можно подтвердить за раз.
-		err = p.channel.Qos(50, 0, false)
-		if err != nil {
-			return nil, fmt.Errorf("Error setting qos: %s", err)
-		}
-	*/
-
 	// Создаём биндинг (правило маршрутизации).
 	if err = r.channel.QueueBind(
 		r.queueName,
@@ -149,34 +238,5 @@ func (r *Rmq) prepareQueue() error {
 		return errors.Wrap(err, "queue bind fail")
 	}
 
-	/*
-		msgs, err := p.channel.Consume(
-			r.queueName,
-			c.consumerTag,
-			false,
-			false,
-			false,
-			false,
-			nil,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("Queue Consume: %s", err)
-		}
-
-		return msgs, nil
-		/**/
-
 	return nil
-}
-
-func (r *Rmq) Publish(body []byte, ct string) error {
-	return r.channel.Publish(
-		r.exchangeName, // exchange
-		r.queueName,    // routing key
-		false,          // mandatory
-		false,          // immediate
-		amqp.Publishing{
-			ContentType: ct,
-			Body:        body,
-		})
 }

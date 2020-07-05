@@ -2,11 +2,12 @@ package grpc
 
 import (
 	"context"
+	"io"
 	"net"
 	"strconv"
 	"time"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/calendar"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/schema"
 
 	"github.com/pkg/errors"
@@ -21,17 +22,25 @@ var (
 	ErrEventNotSet = errors.New("event request not set")
 )
 
-var _ schema.CalendarServer = (*Server)(nil)
+var (
+	_ io.Closer             = (*Server)(nil)
+	_ schema.CalendarServer = (*Server)(nil)
+)
 
 //go:generate protoc --proto_path=../../schema --go_out=plugins=grpc:../../schema ../../schema/calendar.proto
 type Server struct {
-	r    repository.EventsRepo
-	host string
-	port int
+	calendar calendar.Calendarer
+	host     string
+	port     int
+	server   *grpc.Server
 }
 
-func New(r repository.EventsRepo, host string, port int) (*Server, error) {
-	return &Server{r, host, port}, nil
+func New(calendar calendar.Calendarer, host string, port int) (*Server, error) {
+	return &Server{
+		calendar: calendar,
+		host:     host,
+		port:     port,
+	}, nil
 }
 
 // Running grpc-server.
@@ -41,15 +50,20 @@ func (s *Server) Run(ctx context.Context) error {
 		return errors.Wrap(err, "grpc-server listen fail")
 	}
 
-	grpcServer := grpc.NewServer(
+	s.server = grpc.NewServer(
 		grpc.UnaryInterceptor(s.unaryInterceptor),
 	)
 
-	schema.RegisterCalendarServer(grpcServer, s)
-	if err := grpcServer.Serve(lis); err != nil {
+	schema.RegisterCalendarServer(s.server, s)
+	if err := s.server.Serve(lis); err != nil {
 		return errors.Wrap(err, "grpc-server serve fail")
 	}
 
+	return nil
+}
+
+func (s *Server) Close() error {
+	s.server.GracefulStop()
 	return nil
 }
 

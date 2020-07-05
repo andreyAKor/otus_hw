@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	app "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/app/calendar"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/calendar"
 	configsCalendar "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/configs/calendar"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/grpc"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/http"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/logging"
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository"
-	repo "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -63,23 +64,21 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	defer l.Close()
 
-	// Init database type
-	r, err := repository.New(ctx, c.Database.Type, c.Database.DSN)
+	// Init calendar
+	calendar, err := calendar.New(ctx, c.Database.Type, c.Database.DSN)
 	if err != nil {
 		log.Fatal().Err(err).Send()
 	}
-	if v, ok := r.(repo.DBEventsRepo); ok {
-		defer v.Close()
-	}
+	defer calendar.Close()
 
 	// Init http-server
-	httpSrv, err := http.New(r, c.HTTP.Host, c.HTTP.Port)
+	httpSrv, err := http.New(calendar, c.HTTP.Host, c.HTTP.Port)
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize http-server")
 	}
 
 	// Init grpc-server
-	grpcSrv, err := grpc.New(r, c.GRPC.Host, c.GRPC.Port)
+	grpcSrv, err := grpc.New(calendar, c.GRPC.Host, c.GRPC.Port)
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize grpc-server")
 	}
@@ -92,6 +91,19 @@ func run(cmd *cobra.Command, args []string) error {
 	if err := a.Run(ctx); err != nil {
 		log.Fatal().Err(err).Msg("app runnign fail")
 	}
+
+	// Graceful shutdown
+	interruptCh := make(chan os.Signal, 1)
+	signal.Notify(interruptCh, os.Interrupt, syscall.SIGTERM)
+	<-interruptCh
+
+	log.Info().Msg("Stopping...")
+
+	if err := a.Close(); err != nil {
+		log.Fatal().Err(err).Msg("app closing fail")
+	}
+
+	log.Info().Msg("Stopped")
 
 	return nil
 }

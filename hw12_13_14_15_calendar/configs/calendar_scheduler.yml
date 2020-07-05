@@ -10,5 +10,14 @@ rmq:
   uri: "amqp://guest:guest@localhost:5672/"
   exchangeName: "events"
   exchangeType: "fanout"
-  queueName: "notify"
+  queueName: "notifications"
   bindingKey: ""
+  reConnect:
+    maxElapsedTime: "1m"
+    initialInterval: "1s"
+    multiplier: 2
+    maxInterval: "15s"
+
+producer:
+  checkEventsToPublishInterval: "5s"
+  checkOldEventsInterval: "20s"

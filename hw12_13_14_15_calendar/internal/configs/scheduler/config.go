@@ -11,23 +11,15 @@ var _ configs.Configer = (*Config)(nil)
 type Config struct {
 	Logging  configs.Logging
 	Database configs.Database
+	RMQ      configs.RMQ
 
-	// RabbitMQ settings
-	RMQ struct {
-		// URI connection string to RabbitMQ
-		URI string
+	// Producer settings
+	Producer struct {
+		// Interval to checking events for publish
+		CheckEventsToPublishInterval string
 
-		// Exchange name
-		ExchangeName string
-
-		// Exchange type
-		ExchangeType string
-
-		// Queue name
-		QueueName string
-
-		// Message routing rules
-		BindingKey string
+		// Interval to checking old events for deleting
+		CheckOldEventsInterval string
 	}
 }
 

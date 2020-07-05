@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository"
 
 	"github.com/pkg/errors"
 )
@@ -20,7 +20,7 @@ func (s *Server) create(w http.ResponseWriter, r *http.Request) (interface{}, er
 		return nil, errors.Wrap(err, "can't preparing event")
 	}
 
-	id, err := s.r.Create(r.Context(), *ev)
+	id, err := s.calendar.Create(r.Context(), *ev)
 	if err != nil {
 		switch err {
 		case repository.ErrTimeBusy:

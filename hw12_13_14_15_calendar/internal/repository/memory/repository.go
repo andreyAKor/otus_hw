@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository"
 )
 
 var _ repository.EventsRepo = (*Repo)(nil)

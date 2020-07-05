@@ -4,11 +4,15 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	app "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/app/scheduler"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/calendar"
 	configsScheduler "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/configs/scheduler"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/logging"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq/producer"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -60,26 +64,61 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	defer l.Close()
 
-	// Init RabbitMQ connector
-	r, err := rmq.New(
+	// Init calendar
+	calendar, err := calendar.New(ctx, c.Database.Type, c.Database.DSN)
+	if err != nil {
+		log.Fatal().Err(err).Send()
+	}
+	defer calendar.Close()
+
+	// Init RabbitMQ
+	mq, err := rmq.New(
 		c.RMQ.URI,
 		c.RMQ.ExchangeName,
 		c.RMQ.ExchangeType,
 		c.RMQ.QueueName,
 		c.RMQ.BindingKey,
+		c.RMQ.ReConnect.MaxElapsedTime,
+		c.RMQ.ReConnect.InitialInterval,
+		c.RMQ.ReConnect.Multiplier,
+		c.RMQ.ReConnect.MaxInterval,
+	)
+	if err != nil {
+		log.Fatal().Err(err).Msg("can't initialize rmq")
+	}
+
+	// Init producer
+	prod, err := producer.New(
+		calendar,
+		mq,
+		c.Producer.CheckEventsToPublishInterval,
+		c.Producer.CheckOldEventsInterval,
 	)
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize rmq-producer")
 	}
 
 	// Init and run app
-	a, err := app.New(r)
+	a, err := app.New(prod)
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize app")
 	}
 	if err := a.Run(ctx); err != nil {
 		log.Fatal().Err(err).Msg("app runnign fail")
 	}
+
+	// Graceful shutdown
+	interruptCh := make(chan os.Signal, 1)
+	signal.Notify(interruptCh, os.Interrupt, syscall.SIGTERM)
+	<-interruptCh
+
+	log.Info().Msg("Stopping...")
+
+	if err := a.Close(); err != nil {
+		log.Fatal().Err(err).Msg("app closing fail")
+	}
+
+	log.Info().Msg("Stopped")
 
 	return nil
 }

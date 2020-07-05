@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
-	repositoryMocks "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository/mocks"
+	calendarMocks "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/calendar/mocks"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/schema"
 
 	"github.com/golang/mock/gomock"
@@ -30,7 +30,7 @@ func TestUpdate(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			repo := repositoryMocks.NewMockEventsRepo(ctrl)
+			repo := calendarMocks.NewMockCalendarer(ctrl)
 
 			srv, err := New(repo, "", 0)
 			require.NoError(t, err)
@@ -45,7 +45,7 @@ func TestUpdate(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
 
-				repo := repositoryMocks.NewMockEventsRepo(ctrl)
+				repo := calendarMocks.NewMockCalendarer(ctrl)
 
 				srv, err := New(repo, "", 0)
 				require.NoError(t, err)
@@ -60,7 +60,7 @@ func TestUpdate(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
 
-				repo := repositoryMocks.NewMockEventsRepo(ctrl)
+				repo := calendarMocks.NewMockCalendarer(ctrl)
 
 				srv, err := New(repo, "", 0)
 				require.NoError(t, err)
@@ -75,7 +75,7 @@ func TestUpdate(t *testing.T) {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
 
-				repo := repositoryMocks.NewMockEventsRepo(ctrl)
+				repo := calendarMocks.NewMockCalendarer(ctrl)
 
 				srv, err := New(repo, "", 0)
 				require.NoError(t, err)
@@ -92,7 +92,7 @@ func TestUpdate(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
-		repo := repositoryMocks.NewMockEventsRepo(ctrl)
+		repo := calendarMocks.NewMockCalendarer(ctrl)
 
 		srv, err := New(repo, "", 0)
 		require.NoError(t, err)

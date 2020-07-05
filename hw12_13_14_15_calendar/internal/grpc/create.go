@@ -15,7 +15,7 @@ func (s *Server) Create(ctx context.Context, req *schema.CreateRpcRequest) (*sch
 	}
 
 	ev := s.prepareEventRequest(req.Event)
-	id, err := s.r.Create(ctx, ev)
+	id, err := s.calendar.Create(ctx, ev)
 	if err != nil {
 		return nil, errors.Wrap(err, "can't create new event")
 	}
