@@ -1,3 +1,5 @@
 .DS_Store
 bin
 cmd/calendar/calendar
+cmd/calendar_scheduler/calendar_scheduler
+cmd/calendar_sender/calendar_sender
