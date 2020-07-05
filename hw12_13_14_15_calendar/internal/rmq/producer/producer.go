@@ -147,6 +147,7 @@ func (p *Producer) getEvents(ctx context.Context) ([]repository.Event, error) {
 	return events, nil
 }
 
+//nolint:prealloc
 // Prepare events to json-string.
 func (p *Producer) marshaling(events []repository.Event) ([][]byte, error) {
 	var bodies [][]byte

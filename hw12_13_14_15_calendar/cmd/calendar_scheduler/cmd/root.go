@@ -47,6 +47,7 @@ func Execute() {
 	}
 }
 
+//nolint:funlen
 func run(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

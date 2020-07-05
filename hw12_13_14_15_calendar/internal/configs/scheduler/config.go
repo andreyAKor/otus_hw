@@ -26,7 +26,7 @@ type Config struct {
 func (c *Config) Init(file string) error {
 	cfg, err := configs.Init(file, c)
 
-	c, ok := cfg.(*Config)
+	_, ok := cfg.(*Config)
 	if !ok {
 		return errors.Wrap(err, "init config failed")
 	}

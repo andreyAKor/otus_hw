@@ -145,7 +145,7 @@ func (r *Rmq) IsClosed() bool {
 	return r.conn.IsClosed()
 }
 
-// Reconnecting algo
+// Reconnecting algo.
 func (r *Rmq) reConnect(ctx context.Context) error {
 	be := backoff.NewExponentialBackOff()
 	be.MaxElapsedTime = r.reConnMaxElapsedTime
@@ -161,6 +161,8 @@ func (r *Rmq) reConnect(ctx context.Context) error {
 		}
 
 		select {
+		case <-ctx.Done():
+			return nil
 		case <-time.After(d):
 			log.Warn().Str("after", d.String()).Msg("reconnection")
 

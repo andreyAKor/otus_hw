@@ -12,8 +12,6 @@ import (
 	"github.com/streadway/amqp"
 )
 
-const contentType = "application/json"
-
 var _ io.Closer = (*Consumer)(nil)
 
 type Consumer struct {
@@ -83,13 +81,13 @@ func (c *Consumer) Close() error {
 	return c.mq.Close()
 }
 
-func (c *Consumer) worker(workerId int, msgsCh <-chan amqp.Delivery) {
+func (c *Consumer) worker(workerID int, msgsCh <-chan amqp.Delivery) {
 	var conter int
 
 	for msg := range msgsCh {
 		conter++
 		log.Info().
-			Int("workerId", workerId).
+			Int("workerID", workerID).
 			Int("conter", conter).
 			Str("msg", string(msg.Body)).
 			Msg("message")

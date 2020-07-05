@@ -29,7 +29,7 @@ type Logging struct {
 	Level string
 }
 
-// Database settings
+// Database settings.
 type Database struct {
 	// DSN string for database connection.
 	DSN string
@@ -40,7 +40,7 @@ type Database struct {
 	Type string
 }
 
-// RabbitMQ settings
+// RabbitMQ settings.
 type RMQ struct {
 	// URI connection string to RabbitMQ
 	URI string
