@@ -1,0 +1,90 @@
+version: "3"
+
+networks:
+  rabbit:
+    driver: bridge
+  db:
+    driver: bridge
+
+services:
+  calendar:
+    build:
+      context: .
+      dockerfile: build/package/calendar/Dockerfile
+    depends_on:
+      - postgres
+    restart: on-failure
+    ports:
+      - "5080:5080"
+      - "5081:5081"
+    expose:
+      - 5080
+      - 5081
+    environment:
+      DATABASE_DSN: "host=postgres port=5432 password=calend123 user=calend dbname=calendar sslmode=disable"
+      HTTP_HOST: "0.0.0.0"
+      HTTP_PORT: 5080
+      HTTP_HOST: "0.0.0.0"
+      HTTP_PORT: 5081
+    volumes:
+      - /var/log/calendar/:/var/log/calendar/
+    networks:
+      - db
+
+  calendar_scheduler:
+    build:
+      context: .
+      dockerfile: build/package/calendar_scheduler/Dockerfile
+    depends_on:
+      - postgres
+      - rabbit
+      - calendar_sender
+    restart: on-failure
+    environment:
+      DATABASE_DSN: "host=postgres port=5432 password=calend123 user=calend dbname=calendar sslmode=disable"
+      RMQ_URI: "amqp://guest:guest@rabbit:5672/"
+    volumes:
+      - /var/log/calendar_scheduler/:/var/log/calendar_scheduler/
+    networks:
+      - db
+      - rabbit
+
+  calendar_sender:
+    build:
+      context: .
+      dockerfile: build/package/calendar_sender/Dockerfile
+    depends_on:
+      - rabbit
+    restart: on-failure
+    environment:
+      RMQ_URI: "amqp://guest:guest@rabbit:5672/"
+    volumes:
+      - /var/log/calendar_sender/:/var/log/calendar_sender/
+    networks:
+      - rabbit
+
+  postgres:
+    image: postgres:11-alpine
+    ports:
+      - "5432:5432"
+    expose:
+      - 5432
+    environment:
+      POSTGRES_USER: calend
+      POSTGRES_PASSWORD: calend123
+      POSTGRES_DB: calendar
+    networks:
+      - db
+
+  rabbit:
+    image: rabbitmq:3.8-management-alpine
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    expose:
+      - 15672
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - rabbit
