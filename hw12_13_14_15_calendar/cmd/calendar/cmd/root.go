@@ -10,8 +10,6 @@ import (
 	app "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/app/calendar"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/calendar"
 	configsCalendar "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/configs/calendar"
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/grpc"
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/http"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/logging"
 
 	"github.com/pkg/errors"
@@ -71,20 +69,8 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	defer calendar.Close()
 
-	// Init http-server
-	httpSrv, err := http.New(calendar, c.HTTP.Host, c.HTTP.Port)
-	if err != nil {
-		log.Fatal().Err(err).Msg("can't initialize http-server")
-	}
-
-	// Init grpc-server
-	grpcSrv, err := grpc.New(calendar, c.GRPC.Host, c.GRPC.Port)
-	if err != nil {
-		log.Fatal().Err(err).Msg("can't initialize grpc-server")
-	}
-
 	// Init and run app
-	a, err := app.New(httpSrv, grpcSrv)
+	a, err := app.New(calendar, c.HTTP.Host, c.HTTP.Port, c.GRPC.Host, c.GRPC.Port)
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize app")
 	}
