@@ -56,7 +56,6 @@ func New(
 	}
 
 	return &Rmq{
-		connClosed:   make(chan struct{}),
 		uri:          uri,
 		exchangeName: exchangeName,
 		exchangeType: exchangeType,
@@ -72,7 +71,7 @@ func New(
 
 // Init RabbitMQ.
 func (r *Rmq) Init(ctx context.Context) error {
-	if err := r.connect(); err != nil {
+	if err := r.connect(ctx); err != nil {
 		return errors.Wrap(err, "rmq connection fail")
 	}
 
@@ -81,11 +80,10 @@ func (r *Rmq) Init(ctx context.Context) error {
 	}
 
 	go func() {
-		stop := false
-		for !stop {
+		for {
 			select {
 			case <-ctx.Done():
-				stop = true
+				return
 			case <-r.connClosed:
 				if err := r.reConnect(ctx); err != nil {
 					log.Fatal().Err(err).Msg("reconnecting error")
@@ -166,7 +164,7 @@ func (r *Rmq) reConnect(ctx context.Context) error {
 		case <-time.After(d):
 			log.Warn().Str("after", d.String()).Msg("reconnection")
 
-			if err := r.connect(); err != nil {
+			if err := r.connect(ctx); err != nil {
 				log.Error().Err(err).Msg("couldn't connect in reconnect call")
 				continue
 			}
@@ -181,7 +179,7 @@ func (r *Rmq) reConnect(ctx context.Context) error {
 }
 
 // Connect to RabbitMQ.
-func (r *Rmq) connect() error {
+func (r *Rmq) connect(ctx context.Context) error {
 	var err error
 
 	r.conn, err = amqp.Dial(r.uri)
@@ -194,10 +192,15 @@ func (r *Rmq) connect() error {
 		return errors.Wrap(err, "channel fail")
 	}
 
+	r.connClosed = make(chan struct{})
+
 	// Event for closing channel
 	go func() {
-		<-r.conn.NotifyClose(make(chan *amqp.Error))
-		r.connClosed <- struct{}{}
+		select {
+		case <-ctx.Done():
+		case <-r.conn.NotifyClose(make(chan *amqp.Error)):
+			close(r.connClosed)
+		}
 	}()
 
 	if err := r.channel.ExchangeDeclare(

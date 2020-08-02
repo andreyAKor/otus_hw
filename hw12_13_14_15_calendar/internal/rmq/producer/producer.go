@@ -105,11 +105,10 @@ func (p *Producer) Close() error {
 
 func (p *Producer) worker(ctx context.Context, d time.Duration, fn func() error) {
 	go func() {
-		stop := false
-		for !stop {
+		for {
 			select {
 			case <-ctx.Done():
-				stop = true
+				return
 			case <-time.After(d):
 				if err := fn(); err != nil {
 					log.Fatal().Err(err).Msg("worker error")

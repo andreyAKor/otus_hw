@@ -4,9 +4,12 @@ import (
 	"context"
 	"io"
 
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/calendar"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/grpc"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/http"
 
+	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
 
@@ -17,7 +20,23 @@ type App struct {
 	grpcSrv *grpc.Server
 }
 
-func New(httpSrv *http.Server, grpcSrv *grpc.Server) (*App, error) {
+func New(
+	calendar calendar.Calendarer,
+	httpHost string, httpPort int,
+	grpcHost string, grpcPort int,
+) (*App, error) {
+	// Init http-server
+	httpSrv, err := http.New(calendar, httpHost, httpPort)
+	if err != nil {
+		return nil, errors.Wrap(err, "can't initialize http-server")
+	}
+
+	// Init grpc-server
+	grpcSrv, err := grpc.New(calendar, grpcHost, grpcPort)
+	if err != nil {
+		return nil, errors.Wrap(err, "can't initialize grpc-server")
+	}
+
 	return &App{httpSrv, grpcSrv}, nil
 }
 
@@ -37,13 +56,13 @@ func (a *App) Run(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) Close() error {
+func (a *App) Close() (result error) {
 	if err := a.httpSrv.Close(); err != nil {
-		return err
+		result = multierror.Append(result, err)
 	}
 	if err := a.grpcSrv.Close(); err != nil {
-		return err
+		result = multierror.Append(result, err)
 	}
 
-	return nil
+	return
 }

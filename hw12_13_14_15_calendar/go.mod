@@ -7,6 +7,7 @@ require (
 	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.3.3
 	github.com/golangci/golangci-lint v1.27.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.0
 	github.com/jackc/pgx/v4 v4.6.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect

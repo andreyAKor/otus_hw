@@ -62,8 +62,8 @@ func (c *Consumer) Run(ctx context.Context) error {
 			}
 
 			wg := &sync.WaitGroup{}
+			wg.Add(c.threads)
 			for i := 0; i < c.threads; i++ {
-				wg.Add(1)
 				go func(i int) {
 					defer wg.Done()
 					c.worker(i, msgsCh)
