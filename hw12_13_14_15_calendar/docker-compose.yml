@@ -24,8 +24,8 @@ services:
       DATABASE_DSN: "host=postgres port=5432 password=calend123 user=calend dbname=calendar sslmode=disable"
       HTTP_HOST: "0.0.0.0"
       HTTP_PORT: 5080
-      HTTP_HOST: "0.0.0.0"
-      HTTP_PORT: 5081
+      GRPC_HOST: "0.0.0.0"
+      GRPC_PORT: 5081
     volumes:
       - /var/log/calendar/:/var/log/calendar/
     networks:
@@ -38,7 +38,7 @@ services:
     depends_on:
       - postgres
       - rabbit
-      - calendar_sender
+      - calendar
     restart: on-failure
     environment:
       DATABASE_DSN: "host=postgres port=5432 password=calend123 user=calend dbname=calendar sslmode=disable"
@@ -55,6 +55,8 @@ services:
       dockerfile: build/package/calendar_sender/Dockerfile
     depends_on:
       - rabbit
+      - calendar
+      - calendar_scheduler
     restart: on-failure
     environment:
       RMQ_URI: "amqp://guest:guest@rabbit:5672/"
@@ -62,6 +64,19 @@ services:
       - /var/log/calendar_sender/:/var/log/calendar_sender/
     networks:
       - rabbit
+
+  goose:
+    build:
+      context: .
+      dockerfile: build/package/goose/Dockerfile
+    depends_on:
+      - postgres
+    restart: on-failure
+    environment:
+      GOOSE_DRIVER: "postgres"
+      GOOSE_DBSTRING: "host=postgres port=5432 password=calend123 user=calend dbname=calendar sslmode=disable"
+    networks:
+      - db
 
   postgres:
     image: postgres:11-alpine

@@ -6,7 +6,10 @@ import (
 	"sync"
 
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq/producer"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq/producer/senders"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"github.com/streadway/amqp"
@@ -21,16 +24,24 @@ type Consumer struct {
 	qosPrefetchCount int
 	threads          int
 
+	sendersProd producer.Producerer
+
 	done chan struct{}
 }
 
 // Init RabbitMQ consumer.
-func New(mq *rmq.Rmq, consumerTag string, qosPrefetchCount, threads int) (*Consumer, error) {
+func New(
+	mq *rmq.Rmq,
+	consumerTag string,
+	qosPrefetchCount, threads int,
+	sendersProd producer.Producerer,
+) (*Consumer, error) {
 	return &Consumer{
 		mq,
 		consumerTag,
 		qosPrefetchCount,
 		threads,
+		sendersProd,
 		make(chan struct{}),
 	}, nil
 }
@@ -73,12 +84,24 @@ func (c *Consumer) Run(ctx context.Context) error {
 		}
 	}()
 
+	// Init rmq senders-producer
+	if err := c.sendersProd.Run(ctx); err != nil {
+		return errors.Wrap(err, "rmq senders-producer fail")
+	}
+
 	return nil
 }
 
-func (c *Consumer) Close() error {
+func (c *Consumer) Close() (result error) {
 	close(c.done)
-	return c.mq.Close()
+	if err := c.mq.Close(); err != nil {
+		result = multierror.Append(result, err)
+	}
+	if err := c.sendersProd.Close(); err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	return
 }
 
 func (c *Consumer) worker(workerID int, msgsCh <-chan amqp.Delivery) {
@@ -94,6 +117,10 @@ func (c *Consumer) worker(workerID int, msgsCh <-chan amqp.Delivery) {
 
 		if err := msg.Ack(false); err != nil {
 			log.Error().Err(err).Msg("failing acking message of notification")
+		}
+
+		if err := c.sendersProd.Publish([]byte(senders.OK)); err != nil {
+			log.Error().Err(err).Msg("publishing for senders-producer fail")
 		}
 	}
 }

@@ -8,15 +8,18 @@ database:
 
 rmq:
   uri: "amqp://guest:guest@localhost:5672/"
-  exchangeName: "events"
-  exchangeType: "fanout"
-  queueName: "notifications"
-  bindingKey: ""
   reConnect:
     maxElapsedTime: "1m"
     initialInterval: "1s"
     multiplier: 2
     maxInterval: "15s"
+
+queues:
+  events:
+    exchangeName: "events"
+    exchangeType: "fanout"
+    queueName: "notifications"
+    bindingKey: ""
 
 producer:
   checkEventsToPublishInterval: "5s"

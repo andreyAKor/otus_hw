@@ -12,10 +12,10 @@ import (
 var _ io.Closer = (*App)(nil)
 
 type App struct {
-	prod *producer.Producer
+	prod producer.Producerer
 }
 
-func New(prod *producer.Producer) (*App, error) {
+func New(prod producer.Producerer) (*App, error) {
 	return &App{prod}, nil
 }
 

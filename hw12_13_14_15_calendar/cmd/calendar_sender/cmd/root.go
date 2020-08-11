@@ -12,6 +12,7 @@ import (
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/logging"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq/consumer"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq/producer/senders"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -64,35 +65,58 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	defer l.Close()
 
-	// Init RabbitMQ
-	mq, err := rmq.New(
+	// Init senders-producer RabbitMQ
+	sendersProdMq, err := rmq.New(
 		c.RMQ.URI,
-		c.RMQ.ExchangeName,
-		c.RMQ.ExchangeType,
-		c.RMQ.QueueName,
-		c.RMQ.BindingKey,
+		c.Queues.Senders.ExchangeName,
+		c.Queues.Senders.ExchangeType,
+		c.Queues.Senders.QueueName,
+		c.Queues.Senders.BindingKey,
 		c.RMQ.ReConnect.MaxElapsedTime,
 		c.RMQ.ReConnect.InitialInterval,
 		c.RMQ.ReConnect.Multiplier,
 		c.RMQ.ReConnect.MaxInterval,
 	)
 	if err != nil {
-		log.Fatal().Err(err).Msg("can't initialize rmq")
+		log.Fatal().Err(err).Msg("can't initialize rmq for senders-producer")
 	}
 
-	// Init consumer
-	cons, err := consumer.New(
-		mq,
+	// Init senders-producer
+	sendersProd, err := senders.New(sendersProdMq)
+	if err != nil {
+		log.Fatal().Err(err).Msg("can't initialize senders-producer")
+	}
+
+	// Init events-consumer RabbitMQ
+	eventsConsMq, err := rmq.New(
+		c.RMQ.URI,
+		c.Queues.Events.ExchangeName,
+		c.Queues.Events.ExchangeType,
+		c.Queues.Events.QueueName,
+		c.Queues.Events.BindingKey,
+		c.RMQ.ReConnect.MaxElapsedTime,
+		c.RMQ.ReConnect.InitialInterval,
+		c.RMQ.ReConnect.Multiplier,
+		c.RMQ.ReConnect.MaxInterval,
+	)
+	if err != nil {
+		log.Fatal().Err(err).Msg("can't initialize rmq for events-consumer")
+	}
+
+	// Init events-consumer
+	eventsCons, err := consumer.New(
+		eventsConsMq,
 		c.Consumer.ConsumerTag,
 		c.Consumer.QosPrefetchCount,
 		c.Consumer.Threads,
+		sendersProd,
 	)
 	if err != nil {
-		log.Fatal().Err(err).Msg("can't initialize rmq-consumer")
+		log.Fatal().Err(err).Msg("can't initialize events-consumer")
 	}
 
 	// Init and run app
-	a, err := app.New(cons)
+	a, err := app.New(eventsCons)
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize app")
 	}

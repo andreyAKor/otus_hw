@@ -1,0 +1,40 @@
+version: "3"
+
+networks:
+  calendar:
+    driver: bridge
+
+services:
+  integration_tests:
+    build: tests
+    command: "true"
+    environment:
+      TESTS_AMQP_DSN: "amqp://guest:guest@rabbit:5672/"
+      TESTS_RMQ_EXCHANGE_NAME: "stats"
+      TESTS_RMQ_QUEUE_NAME: "senders"
+      TESTS_RMQ_BINDING_KEY: ""
+    links:
+      - calendar
+    networks:
+      - calendar
+      - rabbit
+
+  calendar:
+    environment:
+      HTTP_HOST: "0.0.0.0"
+      HTTP_PORT: 5080
+    networks:
+      - calendar
+
+  calendar_scheduler:
+    environment:
+      DATABASE_DSN: "host=postgres port=5432 password=calend123 user=calend dbname=calendar sslmode=disable"
+      RMQ_URI: "amqp://guest:guest@rabbit:5672/"
+      RMQ_EXCHANGE_NAME: "events"
+      RMQ_QUEUE_NAME: "notifications"
+
+  calendar_sender:
+    environment:
+      RMQ_URI: "amqp://guest:guest@rabbit:5672/"
+      RMQ_EXCHANGE_NAME: "events"
+      RMQ_QUEUE_NAME: "notifications"

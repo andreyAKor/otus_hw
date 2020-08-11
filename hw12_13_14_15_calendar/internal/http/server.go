@@ -23,9 +23,9 @@ const (
 
 var (
 	ErrInvalidRequest = errors.New("the request body can’t be pasred as valid data")
-)
 
-var _ io.Closer = (*Server)(nil)
+	_ io.Closer = (*Server)(nil)
+)
 
 type Server struct {
 	calendar calendar.Calendarer

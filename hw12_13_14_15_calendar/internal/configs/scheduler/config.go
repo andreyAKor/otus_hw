@@ -13,6 +13,10 @@ type Config struct {
 	Database configs.Database
 	RMQ      configs.RMQ
 
+	Queues struct {
+		Events configs.Queue
+	}
+
 	// Producer settings
 	Producer struct {
 		// Interval to checking events for publish

@@ -13,6 +13,11 @@ type Config struct {
 	Database configs.Database
 	RMQ      configs.RMQ
 
+	Queues struct {
+		Events  configs.Queue
+		Senders configs.Queue
+	}
+
 	// Consumer settings
 	Consumer struct {
 		// Consumer tag name
