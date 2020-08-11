@@ -11,10 +11,10 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var _ io.Closer = (*Rmq)(nil)
-
 var (
 	ErrStopReconn = errors.New("stop reconnecting")
+
+	_ io.Closer = (*Rmq)(nil)
 )
 
 type Rmq struct {
@@ -107,6 +107,9 @@ func (r *Rmq) Close() error {
 }
 
 func (r *Rmq) Publish(msg amqp.Publishing) error {
+	if r.channel == nil {
+		return nil
+	}
 	if err := r.channel.Publish(r.exchangeName, r.queueName, false, false, msg); err != nil {
 		return errors.Wrap(err, "rmq publish fail")
 	}

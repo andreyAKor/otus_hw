@@ -4,15 +4,23 @@ logging:
 
 rmq:
   uri: "amqp://guest:guest@localhost:5672/"
-  exchangeName: "events"
-  exchangeType: "fanout"
-  queueName: "notifications"
-  bindingKey: ""
   reConnect:
     maxElapsedTime: "1m"
     initialInterval: "1s"
     multiplier: 2.0
     maxInterval: "15s"
+
+queues:
+  events:
+    exchangeName: "events"
+    exchangeType: "fanout"
+    queueName: "notifications"
+    bindingKey: ""
+  senders:
+    exchangeName: "stats"
+    exchangeType: "fanout"
+    queueName: "senders"
+    bindingKey: ""
 
 consumer:
   consumerTag: "calendar_notifications_sender"

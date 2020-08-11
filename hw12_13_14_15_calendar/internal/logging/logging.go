@@ -25,7 +25,7 @@ func New(filepath, level string) *Log {
 func (l *Log) Init() error {
 	var err error
 
-	l.file, err = os.OpenFile(l.filepath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	l.file, err = os.OpenFile(l.filepath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o666)
 	if err != nil {
 		return errors.Wrapf(err, "error creating file %q", l.filepath)
 	}

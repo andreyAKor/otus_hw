@@ -45,6 +45,17 @@ type RMQ struct {
 	// URI connection string to RabbitMQ
 	URI string
 
+	// Reconnection settings
+	ReConnect struct {
+		MaxElapsedTime  string
+		InitialInterval string
+		Multiplier      float64
+		MaxInterval     string
+	}
+}
+
+// RabbitMQ queue settings.
+type Queue struct {
 	// Exchange name
 	ExchangeName string
 
@@ -56,14 +67,6 @@ type RMQ struct {
 
 	// Message routing rules
 	BindingKey string
-
-	// Reconnection settings
-	ReConnect struct {
-		MaxElapsedTime  string
-		InitialInterval string
-		Multiplier      float64
-		MaxInterval     string
-	}
 }
 
 // Init is using to initialize the current config instance.
