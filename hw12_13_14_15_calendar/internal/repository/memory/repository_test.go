@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
@@ -242,7 +242,7 @@ func TestMemoryRepoMultithreading(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for i := 0; i < 10_000; i++ {
+		for i := 0; i < 5_000; i++ {
 			_, _ = r.Create(ctx, repository.Event{
 				Date: date.Add(time.Hour * time.Duration(i)),
 			})
@@ -252,7 +252,7 @@ func TestMemoryRepoMultithreading(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for i := int64(0); i < 10_000; i++ {
+		for i := int64(0); i < 5_000; i++ {
 			_ = r.Update(ctx, i, repository.Event{
 				Date: date.Add(time.Hour*time.Duration(i) + time.Minute),
 			})
@@ -262,7 +262,7 @@ func TestMemoryRepoMultithreading(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for i := int64(0); i < 10_000; i++ {
+		for i := int64(0); i < 5_000; i++ {
 			_ = r.Delete(ctx, i)
 		}
 	}()
@@ -270,7 +270,7 @@ func TestMemoryRepoMultithreading(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for i := 0; i < 10_000; i++ {
+		for i := 0; i < 5_000; i++ {
 			_ = r.DeleteOld(ctx)
 		}
 	}()
@@ -278,7 +278,7 @@ func TestMemoryRepoMultithreading(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for i := 0; i < 10_000; i++ {
+		for i := 0; i < 5_000; i++ {
 			_, _ = r.GetListByDate(ctx, date)
 		}
 	}()
@@ -286,7 +286,7 @@ func TestMemoryRepoMultithreading(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for i := 0; i < 10_000; i++ {
+		for i := 0; i < 5_000; i++ {
 			_, _ = r.GetListByWeek(ctx, date)
 		}
 	}()
@@ -294,7 +294,7 @@ func TestMemoryRepoMultithreading(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for i := 0; i < 10_000; i++ {
+		for i := 0; i < 5_000; i++ {
 			_, _ = r.GetListByMonth(ctx, date)
 		}
 	}()

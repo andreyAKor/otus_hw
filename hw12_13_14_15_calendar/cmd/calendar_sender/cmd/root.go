@@ -7,10 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	app "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/app/calendar"
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/calendar"
-	configsCalendar "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/configs/calendar"
+	app "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/app/sender"
+	configsSender "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/configs/sender"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/logging"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq/consumer"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -21,9 +22,9 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
-	Use:   "calendar",
-	Short: "Calendar API service application",
-	Long:  "The Calendar API service is the most simplified service for storing calendar events and sending notifications.",
+	Use:   "calendar_sender",
+	Short: "Calendar sender service application",
+	Long:  "The Calendar sender service is the most simplified service sender for searching event to sending notify via RabbitMQ.",
 	RunE:  run,
 }
 
@@ -45,12 +46,13 @@ func Execute() {
 	}
 }
 
+//nolint:funlen
 func run(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// Init config
-	c := new(configsCalendar.Config)
+	c := new(configsSender.Config)
 	if err := c.Init(cfgFile); err != nil {
 		return errors.Wrap(err, "init config failed")
 	}
@@ -62,15 +64,35 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	defer l.Close()
 
-	// Init calendar
-	calendar, err := calendar.New(ctx, c.Database.Type, c.Database.DSN)
+	// Init RabbitMQ
+	mq, err := rmq.New(
+		c.RMQ.URI,
+		c.RMQ.ExchangeName,
+		c.RMQ.ExchangeType,
+		c.RMQ.QueueName,
+		c.RMQ.BindingKey,
+		c.RMQ.ReConnect.MaxElapsedTime,
+		c.RMQ.ReConnect.InitialInterval,
+		c.RMQ.ReConnect.Multiplier,
+		c.RMQ.ReConnect.MaxInterval,
+	)
 	if err != nil {
-		log.Fatal().Err(err).Send()
+		log.Fatal().Err(err).Msg("can't initialize rmq")
 	}
-	defer calendar.Close()
+
+	// Init consumer
+	cons, err := consumer.New(
+		mq,
+		c.Consumer.ConsumerTag,
+		c.Consumer.QosPrefetchCount,
+		c.Consumer.Threads,
+	)
+	if err != nil {
+		log.Fatal().Err(err).Msg("can't initialize rmq-consumer")
+	}
 
 	// Init and run app
-	a, err := app.New(calendar, c.HTTP.Host, c.HTTP.Port, c.GRPC.Host, c.GRPC.Port)
+	a, err := app.New(cons)
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize app")
 	}

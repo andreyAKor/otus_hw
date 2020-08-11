@@ -1,0 +1,23 @@
+logging:
+  file: "/home/andreyakor/Документы/OTUS/Разработчик Golang/Домашки/hw12_13_14_15_calendar_scheduler.log"
+  level: "debug"
+
+database:
+  dsn: "host=127.0.0.1 port=5432 password=calend123 user=calend dbname=calendar sslmode=disable"
+  type: "db"
+
+rmq:
+  uri: "amqp://guest:guest@localhost:5672/"
+  exchangeName: "events"
+  exchangeType: "fanout"
+  queueName: "notifications"
+  bindingKey: ""
+  reConnect:
+    maxElapsedTime: "1m"
+    initialInterval: "1s"
+    multiplier: 2
+    maxInterval: "15s"
+
+producer:
+  checkEventsToPublishInterval: "5s"
+  checkOldEventsInterval: "20s"

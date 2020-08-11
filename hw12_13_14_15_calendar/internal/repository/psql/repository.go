@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository/repository"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/repository"
 
 	// Import Postgres sql driver
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -70,14 +70,15 @@ func (r *Repo) Update(ctx context.Context, id int64, ev repository.Event) error 
 	}
 
 	query := `UPDATE events
-SET title = $1, "date" = $2, duration = $3, descr = $4, duration_start = $5, updated_at = $6
-WHERE id = $7`
+SET title = $1, "date" = $2, duration = $3, descr = $4, user_id = $5, duration_start = $6, updated_at = $7
+WHERE id = $8`
 	res, err := r.db.ExecContext(
 		ctx, query,
 		ev.Title,
 		ev.Date,
 		ev.Duration,
 		ev.Descr,
+		ev.UserID,
 		ev.DurationStart,
 		"now()",
 		id,
