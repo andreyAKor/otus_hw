@@ -2,7 +2,6 @@ package calendar
 
 import (
 	"context"
-	"io"
 	"strings"
 	"time"
 
@@ -19,9 +18,8 @@ type Calendarer interface {
 }
 
 var (
-	ErrUnknowDatabaseType = errors.New("unknow database type")
+	ErrUnknowDatabaseType = errors.New("unknown database type")
 
-	_ io.Closer  = (*Calendar)(nil)
 	_ Calendarer = (*Calendar)(nil)
 )
 

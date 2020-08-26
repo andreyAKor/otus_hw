@@ -12,14 +12,15 @@ import (
 
 const contentType = "application/json"
 
-var _ Producerer = (*Producer)(nil)
+var _ Producer = (*ProducerImpl)(nil)
 
-type Producer struct {
+//nolint:golint
+type ProducerImpl struct {
 	Mq *rmq.Rmq
 }
 
 // Running rmq publisher.
-func (p *Producer) Run(ctx context.Context) error {
+func (p *ProducerImpl) Run(ctx context.Context) error {
 	if err := p.Mq.Init(ctx); err != nil {
 		return errors.Wrap(err, "rmq init fail")
 	}
@@ -28,7 +29,7 @@ func (p *Producer) Run(ctx context.Context) error {
 }
 
 // Publish content to RabbitMQ.
-func (p *Producer) Publish(content []byte) error {
+func (p *ProducerImpl) Publish(content []byte) error {
 	log.Info().
 		Str("content", string(content)).
 		Msg("publish")
@@ -43,6 +44,6 @@ func (p *Producer) Publish(content []byte) error {
 	return nil
 }
 
-func (p *Producer) Close() error {
+func (p *ProducerImpl) Close() error {
 	return p.Mq.Close()
 }

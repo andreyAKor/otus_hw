@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"io"
 	"net"
 	"strconv"
 	"time"
@@ -22,10 +21,7 @@ var (
 	ErrEventNotSet = errors.New("event request not set")
 )
 
-var (
-	_ io.Closer             = (*Server)(nil)
-	_ schema.CalendarServer = (*Server)(nil)
-)
+var _ schema.CalendarServer = (*Server)(nil)
 
 //go:generate protoc --proto_path=../../schema --go_out=plugins=grpc:../../schema ../../schema/calendar.proto
 type Server struct {

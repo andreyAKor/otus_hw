@@ -2,14 +2,11 @@ package sender
 
 import (
 	"context"
-	"io"
 
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq/consumer"
 
 	"github.com/pkg/errors"
 )
-
-var _ io.Closer = (*App)(nil)
 
 type App struct {
 	cons *consumer.Consumer

@@ -2,20 +2,17 @@ package scheduler
 
 import (
 	"context"
-	"io"
 
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq/producer"
 
 	"github.com/pkg/errors"
 )
 
-var _ io.Closer = (*App)(nil)
-
 type App struct {
-	prod producer.Producerer
+	prod producer.Producer
 }
 
-func New(prod producer.Producerer) (*App, error) {
+func New(prod producer.Producer) (*App, error) {
 	return &App{prod}, nil
 }
 

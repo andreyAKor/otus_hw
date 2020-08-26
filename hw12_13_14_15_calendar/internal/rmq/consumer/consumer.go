@@ -2,7 +2,6 @@ package consumer
 
 import (
 	"context"
-	"io"
 	"sync"
 
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq"
@@ -15,8 +14,6 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var _ io.Closer = (*Consumer)(nil)
-
 type Consumer struct {
 	mq *rmq.Rmq
 
@@ -24,7 +21,7 @@ type Consumer struct {
 	qosPrefetchCount int
 	threads          int
 
-	sendersProd producer.Producerer
+	sendersProd producer.Producer
 
 	done chan struct{}
 }
@@ -34,7 +31,7 @@ func New(
 	mq *rmq.Rmq,
 	consumerTag string,
 	qosPrefetchCount, threads int,
-	sendersProd producer.Producerer,
+	sendersProd producer.Producer,
 ) (*Consumer, error) {
 	return &Consumer{
 		mq,

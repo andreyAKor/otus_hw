@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-type Producerer interface {
+type Producer interface {
 	Run(ctx context.Context) error
 	Publish(content []byte) error
 	io.Closer

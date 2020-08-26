@@ -2,7 +2,6 @@ package rmq
 
 import (
 	"context"
-	"io"
 	"time"
 
 	"github.com/cenkalti/backoff/v3"
@@ -11,11 +10,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var (
-	ErrStopReconn = errors.New("stop reconnecting")
-
-	_ io.Closer = (*Rmq)(nil)
-)
+var ErrStopReconn = errors.New("stop reconnecting")
 
 type Rmq struct {
 	conn       *amqp.Connection

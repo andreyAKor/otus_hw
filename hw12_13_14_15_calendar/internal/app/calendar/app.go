@@ -2,7 +2,6 @@ package calendar
 
 import (
 	"context"
-	"io"
 
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/calendar"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/grpc"
@@ -12,8 +11,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
-
-var _ io.Closer = (*App)(nil)
 
 type App struct {
 	httpSrv *http.Server

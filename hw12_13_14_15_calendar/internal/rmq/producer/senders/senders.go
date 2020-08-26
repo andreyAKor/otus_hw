@@ -8,13 +8,13 @@ import (
 const OK = "OK"
 
 type Senders struct {
-	producer.Producer
+	producer.ProducerImpl
 }
 
 // Init RabbitMQ senders-producer.
 func New(mq *rmq.Rmq) (*Senders, error) {
 	return &Senders{
-		Producer: producer.Producer{
+		ProducerImpl: producer.ProducerImpl{
 			Mq: mq,
 		},
 	}, nil

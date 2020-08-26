@@ -15,7 +15,7 @@ import (
 )
 
 type Events struct {
-	producer.Producer
+	producer.ProducerImpl
 
 	calendar calendar.Calendarer
 
@@ -40,7 +40,7 @@ func New(
 	}
 
 	return &Events{
-		Producer: producer.Producer{
+		ProducerImpl: producer.ProducerImpl{
 			Mq: mq,
 		},
 
@@ -57,7 +57,7 @@ func (e *Events) Run(ctx context.Context) error {
 		return errors.Wrap(err, "rmq init fail")
 	}
 
-	producer.Worker(ctx, e.checkEventsToPublishInterval, func() error {
+	producer.Worker(ctx, e.checkEventsToPublishInterval, func(ctx context.Context) error {
 		log.Info().
 			Str("checkEventsToPublishInterval", e.checkEventsToPublishInterval.String()).
 			Msg("checking events to publish")
@@ -86,7 +86,7 @@ func (e *Events) Run(ctx context.Context) error {
 
 		return nil
 	})
-	producer.Worker(ctx, e.checkOldEventsInterval, func() error {
+	producer.Worker(ctx, e.checkOldEventsInterval, func(ctx context.Context) error {
 		log.Info().
 			Str("checkOldEventsInterval", e.checkOldEventsInterval.String()).
 			Msg("checking old events")
