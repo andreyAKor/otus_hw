@@ -21,11 +21,7 @@ const (
 	limitReadBody int64 = 1024 * 10
 )
 
-var (
-	ErrInvalidRequest = errors.New("the request body can’t be pasred as valid data")
-)
-
-var _ io.Closer = (*Server)(nil)
+var ErrInvalidRequest = errors.New("the request body can’t be pasred as valid data")
 
 type Server struct {
 	calendar calendar.Calendarer

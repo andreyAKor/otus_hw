@@ -12,7 +12,7 @@ import (
 	configsScheduler "github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/configs/scheduler"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/logging"
 	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq"
-	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq/producer"
+	"github.com/andreyAKor/otus_hw/hw12_13_14_15_calendar/internal/rmq/producer/events"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
@@ -72,35 +72,35 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	defer calendar.Close()
 
-	// Init RabbitMQ
-	mq, err := rmq.New(
+	// Init events-producer RabbitMQ
+	eventsProdMq, err := rmq.New(
 		c.RMQ.URI,
-		c.RMQ.ExchangeName,
-		c.RMQ.ExchangeType,
-		c.RMQ.QueueName,
-		c.RMQ.BindingKey,
+		c.Queues.Events.ExchangeName,
+		c.Queues.Events.ExchangeType,
+		c.Queues.Events.QueueName,
+		c.Queues.Events.BindingKey,
 		c.RMQ.ReConnect.MaxElapsedTime,
 		c.RMQ.ReConnect.InitialInterval,
 		c.RMQ.ReConnect.Multiplier,
 		c.RMQ.ReConnect.MaxInterval,
 	)
 	if err != nil {
-		log.Fatal().Err(err).Msg("can't initialize rmq")
+		log.Fatal().Err(err).Msg("can't initialize rmq for events-producer")
 	}
 
-	// Init producer
-	prod, err := producer.New(
+	// Init events-producer
+	eventsProd, err := events.New(
 		calendar,
-		mq,
+		eventsProdMq,
 		c.Producer.CheckEventsToPublishInterval,
 		c.Producer.CheckOldEventsInterval,
 	)
 	if err != nil {
-		log.Fatal().Err(err).Msg("can't initialize rmq-producer")
+		log.Fatal().Err(err).Msg("can't initialize events-producer")
 	}
 
 	// Init and run app
-	a, err := app.New(prod)
+	a, err := app.New(eventsProd)
 	if err != nil {
 		log.Fatal().Err(err).Msg("can't initialize app")
 	}

@@ -2,7 +2,6 @@ package rmq
 
 import (
 	"context"
-	"io"
 	"time"
 
 	"github.com/cenkalti/backoff/v3"
@@ -11,11 +10,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var _ io.Closer = (*Rmq)(nil)
-
-var (
-	ErrStopReconn = errors.New("stop reconnecting")
-)
+var ErrStopReconn = errors.New("stop reconnecting")
 
 type Rmq struct {
 	conn       *amqp.Connection
@@ -107,6 +102,9 @@ func (r *Rmq) Close() error {
 }
 
 func (r *Rmq) Publish(msg amqp.Publishing) error {
+	if r.channel == nil {
+		return nil
+	}
 	if err := r.channel.Publish(r.exchangeName, r.queueName, false, false, msg); err != nil {
 		return errors.Wrap(err, "rmq publish fail")
 	}

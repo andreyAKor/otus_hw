@@ -2,7 +2,6 @@ package calendar
 
 import (
 	"context"
-	"io"
 	"strings"
 	"time"
 
@@ -13,17 +12,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	ErrUnknowDatabaseType = errors.New("unknow database type")
-)
-
 //go:generate mockgen -source=$GOFILE -destination ./mocks/mock_calendarer.go -package mocks Calendarer
 type Calendarer interface {
 	repository.EventsRepo
 }
 
 var (
-	_ io.Closer  = (*Calendar)(nil)
+	ErrUnknowDatabaseType = errors.New("unknown database type")
+
 	_ Calendarer = (*Calendar)(nil)
 )
 
@@ -62,6 +58,7 @@ func (c *Calendar) Close() error {
 func (c *Calendar) Create(ctx context.Context, ev repository.Event) (int64, error) {
 	return c.repo.Create(ctx, ev)
 }
+
 func (c *Calendar) Update(ctx context.Context, id int64, ev repository.Event) error {
 	return c.repo.Update(ctx, id, ev)
 }
@@ -69,6 +66,7 @@ func (c *Calendar) Update(ctx context.Context, id int64, ev repository.Event) er
 func (c *Calendar) Delete(ctx context.Context, id int64) error {
 	return c.repo.Delete(ctx, id)
 }
+
 func (c *Calendar) DeleteOld(ctx context.Context) error {
 	return c.repo.DeleteOld(ctx)
 }
@@ -76,9 +74,11 @@ func (c *Calendar) DeleteOld(ctx context.Context) error {
 func (c *Calendar) GetListByDate(ctx context.Context, date time.Time) ([]repository.Event, error) {
 	return c.repo.GetListByDate(ctx, date)
 }
+
 func (c *Calendar) GetListByWeek(ctx context.Context, start time.Time) ([]repository.Event, error) {
 	return c.repo.GetListByWeek(ctx, start)
 }
+
 func (c *Calendar) GetListByMonth(ctx context.Context, start time.Time) ([]repository.Event, error) {
 	return c.repo.GetListByMonth(ctx, start)
 }
